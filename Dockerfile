@@ -9,8 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install all dependencies
-RUN npm ci
+# Install all dependencies (including devDeps for tsc)
+RUN npm ci --include=dev
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -20,7 +20,7 @@ COPY src ./src
 COPY tsconfig.server.json ./
 
 # Compile TypeScript → dist/
-RUN npx tsc -p tsconfig.server.json
+RUN ./node_modules/.bin/tsc -p tsconfig.server.json
 
 # Expose port (Railway sets $PORT dynamically)
 EXPOSE 3000
