@@ -5,8 +5,5 @@ buildCommand = "npm install && npx prisma generate"
 [deploy]
 startCommand = "npx tsx src/server.ts"
 healthcheckPath = "/api/v1/health"
-healthcheckTimeout = 30
+healthcheckTimeout = 60
 restartPolicyType = "on_failure"
-
-[environments.production.deploy]
-startCommand = "npx prisma db push && npx tsx prisma/seed.ts && npx tsx src/server.ts"
