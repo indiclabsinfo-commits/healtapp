@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# Install openssl for Prisma
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 # Copy package files and prisma schema
@@ -12,15 +15,12 @@ RUN npm ci
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy backend source
+# Copy all source files
 COPY src ./src
 COPY tsconfig.server.json ./
 
-# Compile TypeScript to JavaScript
-RUN npx tsc -p tsconfig.server.json
+# Expose port (Railway sets $PORT dynamically)
+EXPOSE 3000
 
-# Expose port
-EXPOSE 3001
-
-# Start the Express API
-CMD ["node", "dist/server.js"]
+# Start Express API using tsx
+CMD ["npx", "tsx", "src/server.ts"]
