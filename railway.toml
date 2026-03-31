@@ -1,8 +1,9 @@
 [build]
-builder = "dockerfile"
-dockerfilePath = "Dockerfile"
+builder = "nixpacks"
+buildCommand = "npx prisma generate && npx tsc -p tsconfig.server.json"
 
 [deploy]
+startCommand = "node dist/server.js"
 healthcheckPath = "/api/v1/health"
-healthcheckTimeout = 60
+healthcheckTimeout = 120
 restartPolicyType = "on_failure"
