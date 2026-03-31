@@ -28,6 +28,9 @@ import { errorHandler } from './middleware/error';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust Railway's proxy (fixes X-Forwarded-For for rate limiting)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
