@@ -1,0 +1,6 @@
+mobile/
+src/
+dist/
+tests/
+prisma/seed.ts
+*.test.ts
