@@ -1,9 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "npx prisma generate && next build",
-  "installCommand": "npm install",
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- src/ prisma/",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@api_url"
-  }
+  "installCommand": "npm install"
 }
