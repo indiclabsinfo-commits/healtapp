@@ -1,6 +1,5 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install && npx prisma generate"
 
 [deploy]
 startCommand = "npx tsx src/server.ts"
