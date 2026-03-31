@@ -15,12 +15,15 @@ RUN npm ci
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy all source files
+# Copy source files and tsconfig
 COPY src ./src
 COPY tsconfig.server.json ./
+
+# Compile TypeScript → dist/
+RUN npx tsc -p tsconfig.server.json
 
 # Expose port (Railway sets $PORT dynamically)
 EXPOSE 3000
 
-# Start Express API using tsx
-CMD ["npx", "tsx", "src/server.ts"]
+# Start compiled Express API
+CMD ["node", "dist/server.js"]
