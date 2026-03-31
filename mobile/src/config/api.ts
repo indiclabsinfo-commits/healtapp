@@ -1,9 +1,7 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-// 10.0.2.2 = emulator alias for Mac localhost
-// 192.168.1.37 = Mac's LAN IP for real device on same WiFi
-const API_BASE_URL = 'http://192.168.1.37:3001/api/v1';
+const API_BASE_URL = 'https://healtapp-production.up.railway.app/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
