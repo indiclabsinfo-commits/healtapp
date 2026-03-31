@@ -9,8 +9,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install all dependencies (including devDeps for tsc)
-RUN npm ci --include=dev
+# Force NODE_ENV=development so devDeps (typescript, etc.) are installed
+ENV NODE_ENV=development
+RUN npm ci
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -21,6 +22,9 @@ COPY tsconfig.server.json ./
 
 # Compile TypeScript → dist/
 RUN ./node_modules/.bin/tsc -p tsconfig.server.json
+
+# Switch to production for runtime
+ENV NODE_ENV=production
 
 # Expose port (Railway sets $PORT dynamically)
 EXPOSE 3000
