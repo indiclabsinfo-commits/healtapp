@@ -36,3 +36,6 @@ prisma/migrations/**/migration_lock.toml
 
 # Build
 dist/
+
+# Compiled backend
+dist/

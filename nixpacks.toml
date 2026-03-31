@@ -2,10 +2,13 @@
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["npm ci --ignore-scripts"]
+cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npx prisma generate"]
+cmds = [
+  "npx prisma generate",
+  "npx tsc -p tsconfig.server.json"
+]
 
 [start]
-cmd = "npx tsx src/server.ts"
+cmd = "node dist/server.js"
