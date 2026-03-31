@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "MindCare",
+    "slug": "mindcare",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0C10"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.indiclabs.mindcare"
+    },
+    "android": {
+      "package": "com.indiclabs.mindcare",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundColor": "#0B0C10"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c7d5056c-5c12-457c-9667-f8e6ee297b38"
+      }
+    }
+  }
+}

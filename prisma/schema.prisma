@@ -1,0 +1,358 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum QuestionType {
+  MCQ
+  SCALE
+  YESNO
+}
+
+enum OrgType {
+  SCHOOL
+  CORPORATE
+}
+
+enum MemberRole {
+  STUDENT
+  EMPLOYEE
+  TEACHER
+  HR
+  ORG_ADMIN
+}
+
+enum CounsellorType {
+  IN_HOUSE
+  EXTERNAL
+}
+
+enum ConsultationStatus {
+  BOOKED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum BehaviorCategory {
+  ACADEMIC
+  SOCIAL
+  EMOTIONAL
+  BEHAVIORAL
+}
+
+enum Severity {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+enum CounselingStatus {
+  NONE
+  PENDING
+  SCHEDULED
+  COMPLETED
+}
+
+model Organization {
+  id            Int                  @id @default(autoincrement())
+  name          String
+  type          OrgType
+  code          String               @unique
+  logo          String?
+  address       String?              @db.Text
+  contactEmail  String?
+  contactPhone  String?
+  creditBalance Int                  @default(0)
+  status        Status               @default(ACTIVE)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  members       OrganizationMember[]
+  consultations Consultation[]
+  behaviorLogs  BehaviorLog[]
+  assignments   Assignment[]
+}
+
+model OrganizationMember {
+  id             Int          @id @default(autoincrement())
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           MemberRole   @default(STUDENT)
+  class          String?
+  department     String?
+  creditBalance  Int          @default(0)
+  joinedAt       DateTime     @default(now())
+
+  @@unique([userId, organizationId])
+}
+
+model User {
+  id          Int              @id @default(autoincrement())
+  email       String           @unique
+  password    String
+  name        String
+  phone       String?
+  avatar      String?
+  gender      String?
+  age         Int?
+  role        Role             @default(USER)
+  status      Status           @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  assessments          Assessment[]
+  moodLogs             MoodLog[]
+  progress             TheoryProgress[]
+  breathingFavourites  BreathingFavourite[]
+  breathingHistory     BreathingHistory[]
+  memberships          OrganizationMember[]
+  consultations        Consultation[]
+  behaviorLogsAsStudent BehaviorLog[]  @relation("BehaviorStudent")
+  behaviorLogsAsTeacher BehaviorLog[]  @relation("BehaviorTeacher")
+  assignmentsCreated   Assignment[]
+}
+
+model Counsellor {
+  id             Int              @id @default(autoincrement())
+  name           String
+  specialization String
+  qualifications String           @db.Text
+  experience     Int
+  bio            String           @db.Text
+  rating         Float            @default(0)
+  photo          String?
+  type           CounsellorType   @default(IN_HOUSE)
+  hourlyRate     Float?
+  organizationId Int?
+  status         Status           @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  tags           CounsellorTag[]
+  slots          ConsultationSlot[]
+  consultations  Consultation[]
+}
+
+model CounsellorTag {
+  id           Int        @id @default(autoincrement())
+  name         String
+  counsellorId Int
+  counsellor   Counsellor @relation(fields: [counsellorId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  levels      Level[]
+}
+
+model Level {
+  id         Int        @id @default(autoincrement())
+  name       String
+  order      Int        @default(0)
+  categoryId Int
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  questions  Question[]
+
+  @@unique([categoryId, order])
+}
+
+model Question {
+  id      Int          @id @default(autoincrement())
+  text    String       @db.Text
+  type    QuestionType @default(MCQ)
+  options Json
+  levelId Int
+  level   Level        @relation(fields: [levelId], references: [id], onDelete: Cascade)
+}
+
+model Questionnaire {
+  id          Int          @id @default(autoincrement())
+  title       String
+  categoryId  Int
+  levelId     Int
+  questionIds Json
+  published   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  assessments Assessment[]
+}
+
+model Assessment {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionnaireId Int
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id])
+  answers         Json
+  score           Float
+  completedAt     DateTime      @default(now())
+}
+
+model TheorySession {
+  id          Int              @id @default(autoincrement())
+  title       String
+  description String           @db.Text
+  modules     Json
+  duration    Int
+  status      String           @default("draft")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  progress    TheoryProgress[]
+}
+
+model TheoryProgress {
+  id               Int           @id @default(autoincrement())
+  userId           Int
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theorySessionId  Int
+  theorySession    TheorySession @relation(fields: [theorySessionId], references: [id], onDelete: Cascade)
+  completedModules Json          @default("[]")
+  completed        Boolean       @default(false)
+  updatedAt        DateTime      @updatedAt
+
+  @@unique([userId, theorySessionId])
+}
+
+model MoodLog {
+  id     Int      @id @default(autoincrement())
+  userId Int
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mood   Int
+  date   DateTime @default(now())
+}
+
+model BreathingExercise {
+  id             Int                  @id @default(autoincrement())
+  name           String
+  description    String               @db.Text
+  inhaleSeconds  Int
+  holdSeconds    Int                  @default(0)
+  exhaleSeconds  Int
+  holdAfterExhale Int                 @default(0)
+  defaultCycles  Int                  @default(5)
+  category       String               @default("relaxation")
+  status         Status               @default(ACTIVE)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  favourites     BreathingFavourite[]
+  history        BreathingHistory[]
+}
+
+model BreathingFavourite {
+  id         Int               @id @default(autoincrement())
+  userId     Int
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseId Int
+  exercise   BreathingExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  createdAt  DateTime          @default(now())
+
+  @@unique([userId, exerciseId])
+}
+
+model BreathingHistory {
+  id          Int               @id @default(autoincrement())
+  userId      Int
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseId  Int
+  exercise    BreathingExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  cycles      Int
+  durationSec Int
+  completedAt DateTime          @default(now())
+}
+
+model ConsultationSlot {
+  id           Int        @id @default(autoincrement())
+  counsellorId Int
+  counsellor   Counsellor @relation(fields: [counsellorId], references: [id], onDelete: Cascade)
+  dayOfWeek    Int        // 0=Mon, 6=Sun
+  startTime    String     // "09:00"
+  endTime      String     // "09:30"
+  duration     Int        @default(30)
+  isAvailable  Boolean    @default(true)
+}
+
+model Consultation {
+  id             Int                @id @default(autoincrement())
+  userId         Int
+  user           User               @relation(fields: [userId], references: [id])
+  counsellorId   Int
+  counsellor     Counsellor         @relation(fields: [counsellorId], references: [id])
+  organizationId Int
+  organization   Organization       @relation(fields: [organizationId], references: [id])
+  date           DateTime
+  time           String
+  duration       Int                @default(30)
+  status         ConsultationStatus @default(BOOKED)
+  type           String             @default("IN_PERSON")
+  notes          String?            @db.Text
+  summary        String?            @db.Text
+  creditUsed     Int                @default(1)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model BehaviorLog {
+  id                Int              @id @default(autoincrement())
+  studentId         Int
+  student           User             @relation("BehaviorStudent", fields: [studentId], references: [id])
+  teacherId         Int
+  teacher           User             @relation("BehaviorTeacher", fields: [teacherId], references: [id])
+  organizationId    Int
+  organization      Organization     @relation(fields: [organizationId], references: [id])
+  date              DateTime         @default(now())
+  category          BehaviorCategory
+  severity          Severity         @default(LOW)
+  notes             String           @db.Text
+  flagForCounseling Boolean          @default(false)
+  counselingStatus  CounselingStatus @default(NONE)
+  createdAt         DateTime         @default(now())
+}
+
+model Assignment {
+  id               Int          @id @default(autoincrement())
+  organizationId   Int
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  assignedById     Int
+  assignedBy       User         @relation(fields: [assignedById], references: [id])
+  type             String       // "ASSESSMENT" or "THEORY"
+  questionnaireId  Int?
+  theorySessionId  Int?
+  targetType       String       // "ALL", "CLASS", "DEPARTMENT", "INDIVIDUAL"
+  targetValue      String?
+  title            String
+  description      String?      @db.Text
+  deadline         DateTime?
+  mandatory        Boolean      @default(false)
+  status           Status       @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+}
+
+model BulkUpload {
+  id           Int      @id @default(autoincrement())
+  filename     String
+  totalRows    Int
+  successCount Int
+  errorCount   Int
+  status       String   @default("processing")
+  errors       Json?
+  uploadedBy   Int
+  createdAt    DateTime @default(now())
+}

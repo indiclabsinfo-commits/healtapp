@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindCare Platform — Proposal & Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0B0C10;
+  --bg2: #0D1117;
+  --card: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.06);
+  --accent: #6FFFE9;
+  --accent2: #5BC0BE;
+  --text: #FFFFFF;
+  --text2: rgba(255,255,255,0.6);
+  --text3: rgba(255,255,255,0.35);
+  --red: #FF6B6B;
+  --purple: #A78BFA;
+  --green: #4ADE80;
+  --yellow: #FFD93D;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.section { padding: 80px 0; }
+.glass { background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; }
+.accent { color: var(--accent); }
+.gradient-text { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.cta-btn { display: inline-block; padding: 16px 32px; border-radius: 16px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0B0C10; font-weight: 600; font-size: 14px; text-decoration: none; border: none; cursor: pointer; transition: all 0.3s; }
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(111,255,233,0.2); }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 500; background: rgba(111,255,233,0.1); color: var(--accent); border: 1px solid rgba(111,255,233,0.15); }
+
+/* Hero */
+.hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; position: relative; overflow: hidden; }
+.hero-orb { position: absolute; width: 400px; height: 400px; border-radius: 50%; background: var(--accent); opacity: 0.04; filter: blur(80px); }
+.hero-orb-1 { top: -100px; right: -100px; }
+.hero-orb-2 { bottom: -100px; left: -100px; background: var(--purple); }
+.hero h1 { font-size: 52px; font-weight: 700; line-height: 1.2; margin-bottom: 20px; }
+.hero p { font-size: 16px; color: var(--text2); max-width: 500px; margin: 0 auto 32px; }
+.hero-badge { display: inline-block; padding: 8px 20px; border-radius: 100px; background: rgba(111,255,233,0.08); border: 1px solid rgba(111,255,233,0.15); font-size: 12px; color: var(--accent); margin-bottom: 24px; letter-spacing: 1px; }
+
+/* Nav dots */
+.nav-dots { position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 100; display: flex; flex-direction: column; gap: 12px; }
+.nav-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); border: none; cursor: pointer; transition: all 0.3s; }
+.nav-dot.active { background: var(--accent); height: 24px; border-radius: 4px; }
+
+/* Section headers */
+.section-num { font-size: 11px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+.section h2 { font-size: 36px; margin-bottom: 12px; }
+.section .subtitle { font-size: 14px; color: var(--text2); max-width: 500px; margin-bottom: 40px; }
+
+/* Flow cards */
+.flow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.flow-card { padding: 24px; position: relative; transition: all 0.3s; }
+.flow-card:hover { transform: translateY(-4px); border-color: rgba(111,255,233,0.15); }
+.flow-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+.flow-card h4 { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.flow-card p { font-size: 12px; color: var(--text3); line-height: 1.6; }
+.flow-num { position: absolute; top: 16px; right: 16px; font-size: 28px; font-weight: 700; color: rgba(255,255,255,0.04); font-family: 'Playfair Display', serif; }
+
+/* Tabs */
+.tabs { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+.tab { padding: 10px 20px; border-radius: 100px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; transition: all 0.3s; background: transparent; color: var(--text3); }
+.tab.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0B0C10; }
+.tab:hover:not(.active) { color: var(--text2); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Role screens */
+.screen-mockup { background: var(--bg2); border-radius: 24px; border: 1px solid var(--border); padding: 20px; min-height: 400px; }
+.screen-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.screen-avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #0B0C10; font-size: 14px; }
+.screen-features { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.screen-feature { padding: 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); }
+.screen-feature .emoji { font-size: 20px; margin-bottom: 8px; }
+.screen-feature h5 { font-family: 'DM Sans'; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.screen-feature p { font-size: 11px; color: var(--text3); }
+
+/* Pricing */
+.pricing-highlight { text-align: center; margin-bottom: 48px; }
+.pricing-highlight .price { font-size: 64px; font-weight: 700; }
+.pricing-formula { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 24px 0; }
+.formula-part { padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; }
+.formula-base { background: rgba(111,255,233,0.1); color: var(--accent); }
+.formula-op { color: var(--text3); font-size: 20px; }
+.formula-user { background: rgba(167,139,250,0.1); color: var(--purple); }
+
+/* Slider */
+.slider-container { margin: 40px 0; text-align: center; }
+.slider-label { font-size: 13px; color: var(--text3); margin-bottom: 12px; }
+.slider { width: 100%; max-width: 500px; margin: 0 auto; appearance: none; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06); outline: none; }
+.slider::-webkit-slider-thumb { appearance: none; width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); cursor: pointer; box-shadow: 0 0 20px rgba(111,255,233,0.3); }
+.pricing-result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 600px; margin: 24px auto; }
+.pricing-result-card { padding: 20px; text-align: center; }
+.pricing-result-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3); }
+.pricing-result-card .value { font-size: 28px; font-weight: 700; font-family: 'Playfair Display', serif; margin-top: 4px; }
+
+/* Comparison */
+.compare-table { width: 100%; border-collapse: collapse; }
+.compare-table th, .compare-table td { padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+.compare-table th { color: var(--text3); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.compare-table .highlight { color: var(--accent); font-weight: 600; }
+
+/* Why us */
+.why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+.why-card { padding: 28px; }
+.why-card .icon { font-size: 28px; margin-bottom: 16px; }
+.why-card h4 { font-family: 'DM Sans'; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.why-card p { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 40px; }
+.timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+.timeline-item { position: relative; margin-bottom: 32px; }
+.timeline-dot { position: absolute; left: -33px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.timeline-item.done .timeline-dot { background: var(--green); }
+.timeline-item h4 { font-family: 'DM Sans'; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.timeline-item p { font-size: 12px; color: var(--text3); }
+.timeline-item .timeline-date { font-size: 11px; color: var(--accent); margin-bottom: 4px; }
+
+/* CTA Section */
+.cta-section { text-align: center; padding: 80px 0; }
+.cta-section h2 { font-size: 40px; margin-bottom: 16px; }
+.cta-section p { color: var(--text2); margin-bottom: 32px; font-size: 15px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero h1 { font-size: 32px; }
+  .section h2 { font-size: 28px; }
+  .pricing-highlight .price { font-size: 40px; }
+  .pricing-result { grid-template-columns: 1fr; }
+  .screen-features { grid-template-columns: 1fr; }
+  .flow-grid { grid-template-columns: 1fr; }
+  .nav-dots { display: none; }
+}
+
+/* Animations */
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.float { animation: float 3s ease-in-out infinite; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+</style>
+</head>
+<body>
+
+<!-- Navigation Dots -->
+<div class="nav-dots">
+  <button class="nav-dot active" onclick="scrollToSection(0)"></button>
+  <button class="nav-dot" onclick="scrollToSection(1)"></button>
+  <button class="nav-dot" onclick="scrollToSection(2)"></button>
+  <button class="nav-dot" onclick="scrollToSection(3)"></button>
+  <button class="nav-dot" onclick="scrollToSection(4)"></button>
+  <button class="nav-dot" onclick="scrollToSection(5)"></button>
+  <button class="nav-dot" onclick="scrollToSection(6)"></button>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="sec-0">
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+  <div class="container" style="position: relative; z-index: 1;">
+    <div class="hero-badge">Indic Labs &times; MindCare</div>
+    <h1>MindCare<span class="accent">.</span></h1>
+    <h1 style="font-size: 28px; font-weight: 400; color: var(--text2); margin-bottom: 20px;">Counselling & Wellness Platform</h1>
+    <p>A complete B2B2C platform for schools and corporates to manage mental wellness — assessments, counselling, breathing exercises, and analytics. All in one place.</p>
+    <a href="#sec-1" class="cta-btn">Explore the Platform &darr;</a>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="sec-1">
+  <div class="container">
+    <p class="section-num">01 &mdash; How It Works</p>
+    <h2>The MindCare <span class="gradient-text">Flow</span></h2>
+    <p class="subtitle">From onboarding to ongoing wellness — here's how your organization uses MindCare.</p>
+
+    <div class="flow-grid">
+      <div class="glass flow-card">
+        <div class="flow-num">01</div>
+        <div class="flow-icon" style="background: rgba(111,255,233,0.1);">&#127979;</div>
+        <h4>Organization Onboards</h4>
+        <p>Your school or company gets a unique Organization Code. Admin sets up departments/classes, adds counsellors, and loads credits.</p>
+      </div>
+      <div class="glass flow-card">
+        <div class="flow-num">02</div>
+        <div class="flow-icon" style="background: rgba(167,139,250,0.1);">&#128100;</div>
+        <h4>Users Join via Code</h4>
+        <p>Students or employees register using the org code. They get role-based access — student, teacher, HR, or counsellor.</p>
+      </div>
+      <div class="glass flow-card">
+        <div class="flow-num">03</div>
+        <div class="flow-icon" style="background: rgba(255,107,107,0.1);">&#128203;</div>
+        <h4>Assessments & Assignments</h4>
+        <p>Admin assigns wellness assessments. Users take quizzes, get scored, and results flow into analytics. Teachers can flag students who need help.</p>
+      </div>
+      <div class="glass flow-card">
+        <div class="flow-num">04</div>
+        <div class="flow-icon" style="background: rgba(255,217,61,0.1);">&#127908;</div>
+        <h4>Book Consultations</h4>
+        <p>Users browse counsellors, pick a time slot, and book using org-provided credits. In-house or external counsellors — all managed centrally.</p>
+      </div>
+      <div class="glass flow-card">
+        <div class="flow-num">05</div>
+        <div class="flow-icon" style="background: rgba(74,222,128,0.1);">&#127793;</div>
+        <h4>Self-Care Tools</h4>
+        <p>Guided breathing exercises with animated visuals. Theory sessions with progress tracking. Mood logging for personal wellness trends.</p>
+      </div>
+      <div class="glass flow-card">
+        <div class="flow-num">06</div>
+        <div class="flow-icon" style="background: rgba(91,192,190,0.1);">&#128200;</div>
+        <h4>Analytics & Insights</h4>
+        <p>Admin sees organization-wide wellness metrics. Teachers see class reports. HR gets department wellness dashboards. Real data, real decisions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROLE-BASED EXPERIENCE -->
+<section class="section" id="sec-2" style="background: var(--bg2);">
+  <div class="container">
+    <p class="section-num">02 &mdash; Role-Based Experience</p>
+    <h2>What Each User <span class="gradient-text">Sees</span></h2>
+    <p class="subtitle">Every role gets a tailored dashboard. No clutter, no confusion.</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('student')">Student / Employee</button>
+      <button class="tab" onclick="showTab('teacher')">Teacher / HR</button>
+      <button class="tab" onclick="showTab('counsellor')">Counsellor</button>
+      <button class="tab" onclick="showTab('admin')">Org Admin</button>
+      <button class="tab" onclick="showTab('super')">Super Admin</button>
+    </div>
+
+    <div class="tab-content active" id="tab-student">
+      <div class="screen-mockup">
+        <div class="screen-header">
+          <div class="screen-avatar">S</div>
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">Student Dashboard</div>
+            <div style="font-size: 11px; color: var(--text3);">Delhi Public School &bull; Class 10-A &bull; 5 Credits</div>
+          </div>
+        </div>
+        <div class="screen-features">
+          <div class="screen-feature"><div class="emoji">&#128203;</div><h5>Self Assessments</h5><p>Take assigned or self-selected wellness quizzes. See scores and progress over time.</p></div>
+          <div class="screen-feature"><div class="emoji">&#127793;</div><h5>Breathing Exercises</h5><p>Animated guided breathing — 4-7-8, box breathing, heart coherence. Track sessions.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128218;</div><h5>Theory Sessions</h5><p>Learn about anxiety, CBT, emotional regulation. Mark modules complete.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128197;</div><h5>Book Counselling</h5><p>Browse counsellors, pick a slot, book using org credits. Video or in-person.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128200;</div><h5>Personal Analytics</h5><p>Mood trends, assessment scores, breathing streaks — all in one view.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128221;</div><h5>Assigned Tasks</h5><p>See what your teacher/HR has assigned. Complete before the deadline.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-teacher">
+      <div class="screen-mockup">
+        <div class="screen-header">
+          <div class="screen-avatar" style="background: linear-gradient(135deg, var(--purple), #7C3AED);">T</div>
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">Teacher Dashboard</div>
+            <div style="font-size: 11px; color: var(--text3);">Delhi Public School &bull; Class Teacher - 10A</div>
+          </div>
+        </div>
+        <div class="screen-features">
+          <div class="screen-feature"><div class="emoji">&#128101;</div><h5>My Students</h5><p>View all students in your class. See their wellness scores and mood trends.</p></div>
+          <div class="screen-feature"><div class="emoji">&#9888;&#65039;</div><h5>Behavior Logging</h5><p>Log academic, social, emotional, or behavioral observations. Flag students for counselling.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128221;</div><h5>Assign Tasks</h5><p>Assign assessments or theory sessions to your class. Set deadlines, mark mandatory.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128200;</div><h5>Class Wellness</h5><p>See aggregated wellness data for your class. Identify patterns and at-risk students.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-counsellor">
+      <div class="screen-mockup">
+        <div class="screen-header">
+          <div class="screen-avatar" style="background: linear-gradient(135deg, var(--green), #16A34A);">C</div>
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">Counsellor Dashboard</div>
+            <div style="font-size: 11px; color: var(--text3);">Dr. Priya Sharma &bull; Clinical Psychologist &bull; In-House</div>
+          </div>
+        </div>
+        <div class="screen-features">
+          <div class="screen-feature"><div class="emoji">&#128197;</div><h5>My Schedule</h5><p>View upcoming sessions. Set your available time slots. Manage booking calendar.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128101;</div><h5>My Clients</h5><p>See all assigned students/employees. View their assessment history and behavior logs.</p></div>
+          <div class="screen-feature"><div class="emoji">&#9888;&#65039;</div><h5>Flagged Students</h5><p>Teachers flagged students who need attention. Review and prioritize sessions.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128221;</div><h5>Session Notes</h5><p>Document sessions privately. Add summaries and follow-up plans after each consultation.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-admin">
+      <div class="screen-mockup">
+        <div class="screen-header">
+          <div class="screen-avatar" style="background: linear-gradient(135deg, var(--yellow), #F59E0B);">A</div>
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">Organization Admin</div>
+            <div style="font-size: 11px; color: var(--text3);">Delhi Public School &bull; Org Code: DPS2026</div>
+          </div>
+        </div>
+        <div class="screen-features">
+          <div class="screen-feature"><div class="emoji">&#128101;</div><h5>Manage Members</h5><p>Add/remove students, teachers, counsellors. Bulk register via CSV. Assign roles.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128179;</div><h5>Credit Management</h5><p>View and add org credits. See credit usage by department. Set per-student limits.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128221;</div><h5>Assignments</h5><p>Assign assessments or theory sessions to classes/departments. Track completion rates.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128200;</div><h5>Analytics</h5><p>Org-wide wellness reports. Department-wise scores. Counsellor utilization rates.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-super">
+      <div class="screen-mockup">
+        <div class="screen-header">
+          <div class="screen-avatar" style="background: linear-gradient(135deg, var(--red), #DC2626);">&#9733;</div>
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">MindCare Super Admin</div>
+            <div style="font-size: 11px; color: var(--text3);">Platform Owner &bull; Full Access</div>
+          </div>
+        </div>
+        <div class="screen-features">
+          <div class="screen-feature"><div class="emoji">&#127970;</div><h5>All Organizations</h5><p>Manage all schools and corporates. Generate org codes. Monitor activity across orgs.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128101;</div><h5>All Users</h5><p>Platform-wide user management. Total user count, active users, growth metrics.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128203;</div><h5>Content Management</h5><p>Manage assessments, theory sessions, breathing exercises — content available to all orgs.</p></div>
+          <div class="screen-feature"><div class="emoji">&#128200;</div><h5>Platform Analytics</h5><p>Revenue tracking, user growth, org activity, consultation metrics. Export reports.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLATFORM DELIVERABLES -->
+<section class="section" id="sec-3">
+  <div class="container">
+    <p class="section-num">03 &mdash; What You Get</p>
+    <h2>Complete <span class="gradient-text">Platform</span></h2>
+    <p class="subtitle">Web app for everyone. Android app for students and employees. One backend, zero duplication.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <div class="glass" style="padding: 28px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <span style="font-size: 24px;">&#128187;</span>
+          <h3 style="font-size: 20px;">Web Application</h3>
+        </div>
+        <ul style="list-style: none; font-size: 13px; color: var(--text2); line-height: 2.2;">
+          <li><span class="accent">&#10003;</span> &nbsp;Admin dashboard with KPIs & analytics</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Organization management + unique codes</li>
+          <li><span class="accent">&#10003;</span> &nbsp;User management + bulk CSV registration</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Questionnaire builder (4-step flow)</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Theory session management</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Breathing exercise management</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Consultation booking system</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Credit management system</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Behavior logging (teachers)</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Assignment system</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Dark & light mode</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Mobile responsive design</li>
+        </ul>
+      </div>
+      <div class="glass" style="padding: 28px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <span style="font-size: 24px;">&#128241;</span>
+          <h3 style="font-size: 20px;">Android App</h3>
+        </div>
+        <ul style="list-style: none; font-size: 13px; color: var(--text2); line-height: 2.2;">
+          <li><span class="accent">&#10003;</span> &nbsp;Student/employee focused interface</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Login with organization code</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Self-assessment quiz flow</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Animated breathing exercises</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Theory sessions + progress</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Consultation booking</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Mood tracking</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Personal analytics</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Push notifications</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Biometric login</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Offline content caching</li>
+          <li><span class="accent">&#10003;</span> &nbsp;Published on Google Play Store</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="sec-4" style="background: var(--bg2);">
+  <div class="container">
+    <p class="section-num">04 &mdash; Pricing</p>
+    <h2>Simple, <span class="gradient-text">Transparent</span> Pricing</h2>
+    <p class="subtitle">No hidden costs. No surprises. You grow, we grow together.</p>
+
+    <div class="pricing-highlight">
+      <div style="margin-bottom: 24px;">
+        <span class="tag" style="font-size: 13px; padding: 8px 20px;">One-Time Setup</span>
+        <div class="price accent" style="margin-top: 8px;">&#8377;60,000</div>
+        <p style="font-size: 13px; color: var(--text3);">Complete platform development — Web App + Android App + Backend + Deployment</p>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 16px;">
+      <span class="tag" style="font-size: 13px; padding: 8px 20px;">Monthly Maintenance</span>
+    </div>
+
+    <div class="pricing-formula">
+      <span class="formula-part formula-base">&#8377;10,000 base</span>
+      <span class="formula-op">+</span>
+      <span class="formula-part formula-user">(Active Users - 200) &times; &#8377;15</span>
+    </div>
+
+    <p style="text-align: center; font-size: 12px; color: var(--text3); margin-bottom: 8px;">First 200 active users are included free in the base fee</p>
+    <p style="text-align: center; font-size: 12px; color: var(--green); margin-bottom: 32px;">&#8377;15/user/month is among the lowest in the industry</p>
+
+    <div class="slider-container">
+      <p class="slider-label">Drag to see your monthly cost</p>
+      <input type="range" min="50" max="5000" value="500" class="slider" id="userSlider" oninput="updatePricing(this.value)">
+      <p style="font-size: 13px; color: var(--text2); margin-top: 8px;"><span id="userCount" style="color: var(--accent); font-weight: 600;">500</span> active users</p>
+    </div>
+
+    <div class="pricing-result">
+      <div class="glass pricing-result-card">
+        <p class="label">Base Fee</p>
+        <p class="value accent">&#8377;10,000</p>
+      </div>
+      <div class="glass pricing-result-card">
+        <p class="label">User Fee</p>
+        <p class="value" style="color: var(--purple);" id="userFee">&#8377;4,500</p>
+      </div>
+      <div class="glass pricing-result-card">
+        <p class="label">Monthly Total</p>
+        <p class="value" style="color: var(--green);" id="monthlyTotal">&#8377;14,500</p>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 16px;">
+      <p style="font-size: 13px; color: var(--text3);">Year 1 Total: <span style="color: var(--yellow); font-weight: 600;" id="yearTotal">&#8377;2,34,000</span></p>
+      <p style="font-size: 11px; color: var(--text3); margin-top: 4px;">(Setup &#8377;60,000 + 12 months of maintenance)</p>
+    </div>
+
+    <div style="max-width: 600px; margin: 40px auto 0;">
+      <div class="glass" style="padding: 24px;">
+        <h4 style="font-family: 'DM Sans'; font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--accent);">What counts as an Active User?</h4>
+        <p style="font-size: 13px; color: var(--text2); line-height: 1.8;">An active user is anyone who <strong style="color: var(--text);">logged in at least once</strong> during the billing month, OR had an assessment/consultation <strong style="color: var(--text);">assigned to them</strong>. Deactivated accounts are never counted. One user across Web + Android counts as one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY INDIC LABS -->
+<section class="section" id="sec-5">
+  <div class="container">
+    <p class="section-num">05 &mdash; Why Us</p>
+    <h2>When You Grow, <span class="gradient-text">We Grow</span></h2>
+    <p class="subtitle">Our pricing is designed so we succeed only when you succeed.</p>
+
+    <div class="why-grid">
+      <div class="glass why-card">
+        <div class="icon">&#129302;</div>
+        <h4>AI-First Company</h4>
+        <p>We use AI throughout our development process — from code generation to testing. This means faster delivery, fewer bugs, and lower costs passed on to you.</p>
+      </div>
+      <div class="glass why-card">
+        <div class="icon">&#127793;</div>
+        <h4>Startup-Friendly Pricing</h4>
+        <p>We believe in growing together. &#8377;15/user/month is the lowest you'll find anywhere. Most competitors charge &#8377;50-100/user. We keep costs low because we want long-term partnerships, not quick profits.</p>
+      </div>
+      <div class="glass why-card">
+        <div class="icon">&#128170;</div>
+        <h4>When You Make Money, We Make Money</h4>
+        <p>Our per-user pricing means we only earn more when your platform has more users. Your success is literally our success. We're invested in your growth.</p>
+      </div>
+      <div class="glass why-card">
+        <div class="icon">&#128274;</div>
+        <h4>You Own Everything</h4>
+        <p>Full source code ownership. Deploy on your own servers. No vendor lock-in. If you ever want to move, you take everything with you.</p>
+      </div>
+      <div class="glass why-card">
+        <div class="icon">&#9889;</div>
+        <h4>Zero Hosting Costs</h4>
+        <p>We deploy on Oracle Cloud Free Tier — &#8377;0/month for hosting. You only pay the Google Play Store fee (&#8377;2,100 one-time). No hidden infrastructure costs.</p>
+      </div>
+      <div class="glass why-card">
+        <div class="icon">&#128640;</div>
+        <h4>Rapid Delivery</h4>
+        <p>Working prototype in 2 weeks. Full platform in 4-6 weeks. We move fast without cutting corners. AI-powered development means 3x faster than traditional agencies.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="section" id="sec-6" style="background: var(--bg2);">
+  <div class="container">
+    <p class="section-num">06 &mdash; Timeline</p>
+    <h2>Development <span class="gradient-text">Roadmap</span></h2>
+    <p class="subtitle">From kickoff to Play Store — here's the plan.</p>
+
+    <div class="timeline" style="max-width: 600px;">
+      <div class="timeline-item done">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">Week 1-2 (Done)</div>
+        <h4>Foundation</h4>
+        <p>Auth system, database, design system, admin layout, user layout. All API foundations.</p>
+      </div>
+      <div class="timeline-item done">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">Week 3-4 (Done)</div>
+        <h4>Core Features</h4>
+        <p>Questionnaire builder, breathing exercises, theory sessions, counsellor management, assessment quiz flow.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">Week 5-6 (Current)</div>
+        <h4>B2B2C Features</h4>
+        <p>Organization codes, role-based dashboards, consultation booking, credit system, behavior logging, assignments.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">Week 7-8</div>
+        <h4>Android + Polish</h4>
+        <p>React Native app with all user features. Push notifications. Final QA and design polish.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">Week 9</div>
+        <h4>Deploy + Launch</h4>
+        <p>Oracle Cloud deployment. Play Store submission. Client handover. Documentation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="sec-7">
+  <div class="container">
+    <div class="hero-orb" style="width: 300px; height: 300px; position: absolute; right: 10%; top: 20%;"></div>
+    <h2>Ready to bring wellness<br>to your organization<span class="accent">?</span></h2>
+    <p>Let's start building MindCare for your schools and corporates.</p>
+    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+      <a href="mailto:hello@indiclabs.in" class="cta-btn">Get Started &rarr;</a>
+      <a href="#sec-4" class="cta-btn" style="background: transparent; border: 1px solid var(--accent); color: var(--accent);">View Pricing</a>
+    </div>
+    <p style="margin-top: 40px; font-size: 12px; color: var(--text3);">Indic Labs &bull; AI-First Development &bull; March 2026</p>
+  </div>
+</section>
+
+<script>
+// Tab switching
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Pricing slider
+function updatePricing(users) {
+  users = parseInt(users);
+  document.getElementById('userCount').textContent = users.toLocaleString('en-IN');
+  const userFee = Math.max(0, (users - 200) * 15);
+  const monthly = 10000 + userFee;
+  const yearly = 60000 + (monthly * 12);
+  document.getElementById('userFee').innerHTML = '&#8377;' + userFee.toLocaleString('en-IN');
+  document.getElementById('monthlyTotal').innerHTML = '&#8377;' + monthly.toLocaleString('en-IN');
+  document.getElementById('yearTotal').innerHTML = '&#8377;' + yearly.toLocaleString('en-IN');
+}
+
+// Scroll navigation
+function scrollToSection(i) {
+  document.getElementById('sec-' + i).scrollIntoView({ behavior: 'smooth' });
+}
+
+// Active dot tracking
+window.addEventListener('scroll', () => {
+  const dots = document.querySelectorAll('.nav-dot');
+  const sections = document.querySelectorAll('[id^="sec-"]');
+  let current = 0;
+  sections.forEach((s, i) => {
+    if (window.scrollY >= s.offsetTop - 200) current = i;
+  });
+  dots.forEach((d, i) => d.classList.toggle('active', i === current));
+});
+</script>
+
+</body>
+</html>

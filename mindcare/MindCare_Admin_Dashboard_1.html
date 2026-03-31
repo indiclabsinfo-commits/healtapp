@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindCare — Admin Dashboard UI Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0B0C10;font-family:'DM Sans',sans-serif;color:#E2E8F0;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:4px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes countUp{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+.glass{background:rgba(255,255,255,0.03);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.05);border-radius:16px}
+.accent{color:#6FFFE9}
+.tag{display:inline-block;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:500;background:rgba(111,255,233,0.08);color:#6FFFE9;border:1px solid rgba(111,255,233,0.12)}
+.tag-orange{background:rgba(255,107,107,0.08);color:#FF6B6B;border-color:rgba(255,107,107,0.12)}
+.tag-purple{background:rgba(167,139,250,0.08);color:#A78BFA;border-color:rgba(167,139,250,0.12)}
+.tag-yellow{background:rgba(255,217,61,0.08);color:#FFD93D;border-color:rgba(255,217,61,0.12)}
+.tag-green{background:rgba(74,222,128,0.08);color:#4ADE80;border-color:rgba(74,222,128,0.12)}
+
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:rgba(15,16,22,0.95);border-right:1px solid rgba(255,255,255,0.04);padding:24px 16px;display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sidebar-logo{display:flex;align-items:center;gap:10px;margin-bottom:36px;padding:0 8px}
+.sidebar-logo-icon{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#6FFFE9,#5BC0BE);display:flex;align-items:center;justify-content:center;font-size:16px}
+.sidebar-logo span{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:#fff;letter-spacing:0.5px}
+.nav-section{font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,0.2);padding:0 12px;margin:20px 0 8px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all 0.2s;font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:2px}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7)}
+.nav-item.active{background:rgba(111,255,233,0.08);color:#6FFFE9;font-weight:500}
+.nav-item .icon{width:18px;text-align:center;font-size:14px}
+
+.main{margin-left:240px;padding:28px 32px;min-height:100vh}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.page-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;color:#fff}
+.page-sub{font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.search-box{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);width:240px}
+.search-box input{background:none;border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;width:100%}
+.search-box input::placeholder{color:rgba(255,255,255,0.25)}
+.avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6FFFE9,#5BC0BE);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0B0C10}
+.notif{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;position:relative}
+.notif-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:#FF6B6B}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi{padding:20px;animation:fadeUp 0.5s ease-out both}
+.kpi-label{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.5px;margin-bottom:8px}
+.kpi-value{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;margin-bottom:4px;animation:countUp 0.6s ease-out 0.3s both}
+.kpi-change{font-size:10px;font-weight:500}
+.kpi-change.up{color:#4ADE80}
+.kpi-change.down{color:#FF6B6B}
+
+.card{padding:20px;margin-bottom:16px;animation:fadeUp 0.5s ease-out both}
+.card-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.card-title .more{font-size:11px;color:#6FFFE9;cursor:pointer;font-weight:400}
+
+.table-row{display:grid;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px}
+.table-row:last-child{border-bottom:none}
+.table-header{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;text-transform:uppercase;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;transition:all 0.2s}
+.btn-primary{background:linear-gradient(135deg,#6FFFE9,#5BC0BE);color:#0B0C10}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(111,255,233,0.2)}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.15);color:#fff}
+
+.chart-bar-group{display:flex;align-items:flex-end;gap:8px;height:140px;padding:0 4px}
+.chart-bar{flex:1;border-radius:6px 6px 0 0;transition:all 0.3s;cursor:pointer;position:relative}
+.chart-bar:hover{opacity:0.8}
+.chart-labels{display:flex;justify-content:space-between;padding:8px 4px 0;font-size:9px;color:rgba(255,255,255,0.2)}
+.donut-ring{width:120px;height:120px;border-radius:50%;background:conic-gradient(#6FFFE9 0% 30%,#FF6B6B 30% 55%,#A78BFA 55% 75%,#FFD93D 75% 90%,rgba(255,255,255,0.06) 90% 100%);display:flex;align-items:center;justify-content:center;margin:0 auto}
+.donut-hole{width:80px;height:80px;border-radius:50%;background:#0F1016;display:flex;align-items:center;justify-content:center;flex-direction:column}
+
+.content-section{display:none}
+.content-section.active{display:block;animation:fadeIn 0.3s ease-out}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.3);margin-bottom:6px;display:block;text-transform:uppercase}
+.form-input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:all 0.2s}
+.form-input:focus{border-color:rgba(111,255,233,0.3)}
+.form-input::placeholder{color:rgba(255,255,255,0.2)}
+select.form-input{appearance:none;cursor:pointer}
+textarea.form-input{resize:vertical;min-height:80px}
+
+.upload-zone{border:2px dashed rgba(255,255,255,0.08);border-radius:14px;padding:30px;text-align:center;cursor:pointer;transition:all 0.2s}
+.upload-zone:hover{border-color:rgba(111,255,233,0.2);background:rgba(111,255,233,0.02)}
+
+.q-flow{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.q-step{flex:1;min-width:120px;padding:14px;border-radius:12px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05)}
+.q-step.active{background:rgba(111,255,233,0.08);border-color:rgba(111,255,233,0.2)}
+.q-step .num{font-size:18px;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:4px}
+.q-step .label{font-size:10px;color:rgba(255,255,255,0.4)}
+.q-step.active .num{color:#6FFFE9}
+.q-step.active .label{color:#6FFFE9}
+
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.kpi-grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">🧠</div>
+    <span>MindCare</span>
+  </div>
+  <div class="nav-section">Main</div>
+  <div class="nav-item active" onclick="showSection('dashboard')"><span class="icon">📊</span>Dashboard</div>
+  <div class="nav-item" onclick="showSection('users')"><span class="icon">👥</span>Users</div>
+  <div class="nav-item" onclick="showSection('counsellors')"><span class="icon">🩺</span>Counsellors</div>
+  <div class="nav-section">Content</div>
+  <div class="nav-item" onclick="showSection('questionnaire')"><span class="icon">📋</span>Questionnaire</div>
+  <div class="nav-item" onclick="showSection('workshops')"><span class="icon">🎯</span>Workshops</div>
+  <div class="nav-item" onclick="showSection('theory')"><span class="icon">📖</span>Theory Sessions</div>
+  <div class="nav-section">System</div>
+  <div class="nav-item" onclick="showSection('bulk')"><span class="icon">📤</span>Bulk Register</div>
+  <div class="nav-item" onclick="showSection('analytics')"><span class="icon">📈</span>Analytics</div>
+  <div style="margin-top:auto;padding-top:20px;border-top:1px solid rgba(255,255,255,0.04)">
+    <div class="nav-item"><span class="icon">⚙️</span>Settings</div>
+    <div class="nav-item"><span class="icon">🚪</span>Logout</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div id="pageHeader">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Welcome back, Admin. Here's what's happening.</div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-box"><span style="color:rgba(255,255,255,0.2)">🔍</span><input placeholder="Search anything..." /></div>
+      <div class="notif">🔔<div class="notif-dot"></div></div>
+      <div class="avatar">A</div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="content-section active" id="sec-dashboard">
+    <div class="kpi-grid">
+      <div class="glass kpi" style="animation-delay:0s"><div class="kpi-label">Total Users</div><div class="kpi-value accent">12,459</div><div class="kpi-change up">↑ 12.5% vs last month</div></div>
+      <div class="glass kpi" style="animation-delay:0.1s"><div class="kpi-label">Active Sessions</div><div class="kpi-value" style="color:#FF6B6B">842</div><div class="kpi-change up">↑ 8.2% vs last week</div></div>
+      <div class="glass kpi" style="animation-delay:0.2s"><div class="kpi-label">Counsellors</div><div class="kpi-value" style="color:#A78BFA">56</div><div class="kpi-change up">+3 new this month</div></div>
+      <div class="glass kpi" style="animation-delay:0.3s"><div class="kpi-label">Completion Rate</div><div class="kpi-value" style="color:#4ADE80">87%</div><div class="kpi-change up">↑ 4.1% improvement</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+      <div class="glass card"><div class="card-title">User Registration Trend <span class="more">View All →</span></div>
+        <div class="chart-bar-group">
+          <div class="chart-bar" style="height:35%;background:linear-gradient(to top,rgba(111,255,233,0.1),rgba(111,255,233,0.4))"></div>
+          <div class="chart-bar" style="height:52%;background:linear-gradient(to top,rgba(111,255,233,0.1),rgba(111,255,233,0.55))"></div>
+          <div class="chart-bar" style="height:42%;background:linear-gradient(to top,rgba(111,255,233,0.1),rgba(111,255,233,0.45))"></div>
+          <div class="chart-bar" style="height:68%;background:linear-gradient(to top,rgba(111,255,233,0.1),rgba(111,255,233,0.7))"></div>
+          <div class="chart-bar" style="height:78%;background:linear-gradient(to top,rgba(111,255,233,0.1),rgba(111,255,233,0.8))"></div>
+          <div class="chart-bar" style="height:60%;background:linear-gradient(to top,rgba(111,255,233,0.1),rgba(111,255,233,0.6))"></div>
+          <div class="chart-bar" style="height:90%;background:linear-gradient(to top,rgba(111,255,233,0.15),rgba(111,255,233,0.9))"></div>
+          <div class="chart-bar" style="height:72%;background:linear-gradient(to top,rgba(111,255,233,0.1),rgba(111,255,233,0.75))"></div>
+        </div>
+        <div class="chart-labels"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span></div>
+      </div>
+      <div class="glass card"><div class="card-title">By Category</div>
+        <div class="donut-ring"><div class="donut-hole"><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff">4</div><div style="font-size:9px;color:rgba(255,255,255,0.35)">Categories</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px"><div style="width:8px;height:8px;border-radius:2px;background:#6FFFE9"></div>Anxiety <span style="margin-left:auto;color:rgba(255,255,255,0.3)">30%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px"><div style="width:8px;height:8px;border-radius:2px;background:#FF6B6B"></div>Depression <span style="margin-left:auto;color:rgba(255,255,255,0.3)">25%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px"><div style="width:8px;height:8px;border-radius:2px;background:#A78BFA"></div>Stress <span style="margin-left:auto;color:rgba(255,255,255,0.3)">20%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px"><div style="width:8px;height:8px;border-radius:2px;background:#FFD93D"></div>Self-esteem <span style="margin-left:auto;color:rgba(255,255,255,0.3)">15%</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="glass card"><div class="card-title">Recent Users <span class="more">View All →</span></div>
+        <div class="table-header" style="grid-template-columns:1fr 1fr 1fr 0.6fr;display:grid"><span>Name</span><span>Email</span><span>Joined</span><span>Status</span></div>
+        <div class="table-row" style="grid-template-columns:1fr 1fr 1fr 0.6fr"><span style="font-weight:500;color:#fff">Riya Patel</span><span style="color:rgba(255,255,255,0.4)">riya@email.com</span><span style="color:rgba(255,255,255,0.4)">Mar 10</span><span class="tag-green" style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:9px;background:rgba(74,222,128,0.08);color:#4ADE80">Active</span></div>
+        <div class="table-row" style="grid-template-columns:1fr 1fr 1fr 0.6fr"><span style="font-weight:500;color:#fff">Arjun Singh</span><span style="color:rgba(255,255,255,0.4)">arjun@email.com</span><span style="color:rgba(255,255,255,0.4)">Mar 9</span><span class="tag-green" style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:9px;background:rgba(74,222,128,0.08);color:#4ADE80">Active</span></div>
+        <div class="table-row" style="grid-template-columns:1fr 1fr 1fr 0.6fr"><span style="font-weight:500;color:#fff">Meera Joshi</span><span style="color:rgba(255,255,255,0.4)">meera@email.com</span><span style="color:rgba(255,255,255,0.4)">Mar 8</span><span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:9px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3)">Pending</span></div>
+      </div>
+      <div class="glass card"><div class="card-title">Upcoming Events <span class="more">View All →</span></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02)"><div style="width:40px;height:40px;border-radius:10px;background:rgba(111,255,233,0.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#6FFFE9;line-height:1.2;text-align:center;flex-shrink:0">15<br><span style="font-size:7px">MAR</span></div><div><div style="font-size:12px;font-weight:500;color:#fff">Stress Management</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">Workshop • 45 registered</div></div></div>
+          <div style="display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02)"><div style="width:40px;height:40px;border-radius:10px;background:rgba(167,139,250,0.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#A78BFA;line-height:1.2;text-align:center;flex-shrink:0">18<br><span style="font-size:7px">MAR</span></div><div><div style="font-size:12px;font-weight:500;color:#fff">Mindful Living</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">Seminar • 32 registered</div></div></div>
+          <div style="display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02)"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,107,107,0.08);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#FF6B6B;line-height:1.2;text-align:center;flex-shrink:0">22<br><span style="font-size:7px">MAR</span></div><div><div style="font-size:12px;font-weight:500;color:#fff">Dealing with Burnout</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">Workshop • 58 registered</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== USERS ===== -->
+  <div class="content-section" id="sec-users">
+    <div style="display:flex;gap:12px;margin-bottom:20px"><button class="btn btn-primary">+ Add User</button><button class="btn btn-ghost">Export CSV</button><button class="btn btn-ghost">Filter</button></div>
+    <div class="glass card">
+      <div class="table-header" style="grid-template-columns:0.5fr 1.2fr 1.5fr 0.8fr 0.8fr 0.8fr;display:grid"><span>ID</span><span>Name</span><span>Email</span><span>Joined</span><span>Status</span><span>Actions</span></div>
+      <div class="table-row" style="grid-template-columns:0.5fr 1.2fr 1.5fr 0.8fr 0.8fr 0.8fr"><span style="color:rgba(255,255,255,0.3)">#1042</span><span style="font-weight:500;color:#fff">Riya Patel</span><span style="color:rgba(255,255,255,0.4)">riya.patel@email.com</span><span style="color:rgba(255,255,255,0.4)">Mar 10</span><span class="tag">Active</span><span style="color:#6FFFE9;cursor:pointer;font-size:11px">Edit</span></div>
+      <div class="table-row" style="grid-template-columns:0.5fr 1.2fr 1.5fr 0.8fr 0.8fr 0.8fr"><span style="color:rgba(255,255,255,0.3)">#1041</span><span style="font-weight:500;color:#fff">Arjun Singh</span><span style="color:rgba(255,255,255,0.4)">arjun.singh@email.com</span><span style="color:rgba(255,255,255,0.4)">Mar 9</span><span class="tag">Active</span><span style="color:#6FFFE9;cursor:pointer;font-size:11px">Edit</span></div>
+      <div class="table-row" style="grid-template-columns:0.5fr 1.2fr 1.5fr 0.8fr 0.8fr 0.8fr"><span style="color:rgba(255,255,255,0.3)">#1040</span><span style="font-weight:500;color:#fff">Meera Joshi</span><span style="color:rgba(255,255,255,0.4)">meera.j@email.com</span><span style="color:rgba(255,255,255,0.4)">Mar 8</span><span class="tag tag-orange">Inactive</span><span style="color:#6FFFE9;cursor:pointer;font-size:11px">Edit</span></div>
+      <div class="table-row" style="grid-template-columns:0.5fr 1.2fr 1.5fr 0.8fr 0.8fr 0.8fr"><span style="color:rgba(255,255,255,0.3)">#1039</span><span style="font-weight:500;color:#fff">Vikram Rao</span><span style="color:rgba(255,255,255,0.4)">vikram@email.com</span><span style="color:rgba(255,255,255,0.4)">Mar 7</span><span class="tag">Active</span><span style="color:#6FFFE9;cursor:pointer;font-size:11px">Edit</span></div>
+      <div class="table-row" style="grid-template-columns:0.5fr 1.2fr 1.5fr 0.8fr 0.8fr 0.8fr"><span style="color:rgba(255,255,255,0.3)">#1038</span><span style="font-weight:500;color:#fff">Ananya Desai</span><span style="color:rgba(255,255,255,0.4)">ananya.d@email.com</span><span style="color:rgba(255,255,255,0.4)">Mar 6</span><span class="tag">Active</span><span style="color:#6FFFE9;cursor:pointer;font-size:11px">Edit</span></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-size:11px;color:rgba(255,255,255,0.3)"><span>Showing 1-5 of 12,459 users</span><div style="display:flex;gap:6px"><button class="btn btn-ghost" style="padding:6px 12px">← Prev</button><button class="btn btn-ghost" style="padding:6px 12px">Next →</button></div></div>
+  </div>
+
+  <!-- ===== COUNSELLORS ===== -->
+  <div class="content-section" id="sec-counsellors">
+    <div style="display:flex;gap:12px;margin-bottom:20px"><button class="btn btn-primary">+ Add Counsellor</button><button class="btn btn-ghost">Filter by Specialization</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div class="glass card" style="text-align:center;padding:24px"><div style="width:56px;height:56px;border-radius:18px;background:rgba(111,255,233,0.08);border:1px solid rgba(111,255,233,0.12);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px">👩‍⚕️</div><div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">Dr. Priya Sharma</div><div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px">Clinical Psychologist • 8 yrs</div><div style="display:flex;gap:4px;justify-content:center;margin-bottom:12px"><span class="tag" style="font-size:9px">Anxiety</span><span class="tag" style="font-size:9px">CBT</span><span class="tag" style="font-size:9px">Depression</span></div><div style="display:flex;justify-content:center;gap:12px;font-size:10px"><span style="color:#FFD93D">⭐ 4.9</span><span style="color:rgba(255,255,255,0.2)">|</span><span style="color:rgba(255,255,255,0.35)">200+ sessions</span></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-ghost" style="flex:1;font-size:10px">Edit</button><button class="btn btn-primary" style="flex:1;font-size:10px">View</button></div></div>
+      <div class="glass card" style="text-align:center;padding:24px"><div style="width:56px;height:56px;border-radius:18px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.12);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px">👨‍⚕️</div><div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">Dr. Arjun Mehta</div><div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px">Counselling Psych. • 5 yrs</div><div style="display:flex;gap:4px;justify-content:center;margin-bottom:12px"><span class="tag tag-orange" style="font-size:9px">Stress</span><span class="tag tag-orange" style="font-size:9px">Relationships</span></div><div style="display:flex;justify-content:center;gap:12px;font-size:10px"><span style="color:#FFD93D">⭐ 4.8</span><span style="color:rgba(255,255,255,0.2)">|</span><span style="color:rgba(255,255,255,0.35)">150+ sessions</span></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-ghost" style="flex:1;font-size:10px">Edit</button><button class="btn btn-primary" style="flex:1;font-size:10px">View</button></div></div>
+      <div class="glass card" style="text-align:center;padding:24px"><div style="width:56px;height:56px;border-radius:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.12);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px">👩‍⚕️</div><div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">Dr. Neha Gupta</div><div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px">Behavioral Therapist • 10 yrs</div><div style="display:flex;gap:4px;justify-content:center;margin-bottom:12px"><span class="tag tag-purple" style="font-size:9px">Mindfulness</span><span class="tag tag-purple" style="font-size:9px">Trauma</span></div><div style="display:flex;justify-content:center;gap:12px;font-size:10px"><span style="color:#FFD93D">⭐ 4.9</span><span style="color:rgba(255,255,255,0.2)">|</span><span style="color:rgba(255,255,255,0.35)">300+ sessions</span></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-ghost" style="flex:1;font-size:10px">Edit</button><button class="btn btn-primary" style="flex:1;font-size:10px">View</button></div></div>
+    </div>
+  </div>
+
+  <!-- ===== QUESTIONNAIRE ===== -->
+  <div class="content-section" id="sec-questionnaire">
+    <div class="q-flow">
+      <div class="q-step active"><div class="num">1</div><div class="label">Categories</div></div>
+      <div class="q-step"><div class="num">2</div><div class="label">Levels</div></div>
+      <div class="q-step"><div class="num">3</div><div class="label">Questions</div></div>
+      <div class="q-step"><div class="num">4</div><div class="label">Build Quiz</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="glass card"><div class="card-title">Categories <button class="btn btn-primary" style="font-size:10px;padding:6px 12px">+ New</button></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div><div style="font-size:13px;font-weight:500;color:#fff">Anxiety</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">3 levels • 24 questions</div></div><div style="display:flex;gap:8px"><span style="font-size:10px;color:#6FFFE9;cursor:pointer">Edit</span><span style="font-size:10px;color:#FF6B6B;cursor:pointer">Delete</span></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div><div style="font-size:13px;font-weight:500;color:#fff">Depression</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">3 levels • 18 questions</div></div><div style="display:flex;gap:8px"><span style="font-size:10px;color:#6FFFE9;cursor:pointer">Edit</span><span style="font-size:10px;color:#FF6B6B;cursor:pointer">Delete</span></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div><div style="font-size:13px;font-weight:500;color:#fff">Stress</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">2 levels • 16 questions</div></div><div style="display:flex;gap:8px"><span style="font-size:10px;color:#6FFFE9;cursor:pointer">Edit</span><span style="font-size:10px;color:#FF6B6B;cursor:pointer">Delete</span></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div><div style="font-size:13px;font-weight:500;color:#fff">Self-esteem</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">2 levels • 12 questions</div></div><div style="display:flex;gap:8px"><span style="font-size:10px;color:#6FFFE9;cursor:pointer">Edit</span><span style="font-size:10px;color:#FF6B6B;cursor:pointer">Delete</span></div></div>
+        </div>
+      </div>
+      <div class="glass card"><div class="card-title">Build Questionnaire</div>
+        <div class="form-group"><div class="form-label">Select Category</div><select class="form-input"><option>Anxiety</option><option>Depression</option><option>Stress</option></select></div>
+        <div class="form-group"><div class="form-label">Select Level</div><select class="form-input"><option>Level 1 — Basic</option><option>Level 2 — Intermediate</option><option>Level 3 — Advanced</option></select></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px">Available questions: 24 | Selected: 8</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(111,255,233,0.04);border:1px solid rgba(111,255,233,0.1)"><div style="width:16px;height:16px;border-radius:4px;background:#6FFFE9;display:flex;align-items:center;justify-content:center;font-size:8px;color:#0B0C10;flex-shrink:0">✓</div><span style="font-size:11px;flex:1">How often do you feel anxious?</span><span style="font-size:9px;color:rgba(255,255,255,0.2)">MCQ</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(111,255,233,0.04);border:1px solid rgba(111,255,233,0.1)"><div style="width:16px;height:16px;border-radius:4px;background:#6FFFE9;display:flex;align-items:center;justify-content:center;font-size:8px;color:#0B0C10;flex-shrink:0">✓</div><span style="font-size:11px;flex:1">Rate your worry level this week</span><span style="font-size:9px;color:rgba(255,255,255,0.2)">Scale</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div style="width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);flex-shrink:0"></div><span style="font-size:11px;color:rgba(255,255,255,0.4);flex:1">Do you avoid social situations?</span><span style="font-size:9px;color:rgba(255,255,255,0.2)">MCQ</span></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%">Save Questionnaire</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WORKSHOPS ===== -->
+  <div class="content-section" id="sec-workshops">
+    <div style="display:flex;gap:12px;margin-bottom:20px"><button class="btn btn-primary">+ Create Workshop</button><button class="btn btn-ghost">Past Events</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="glass card"><div class="card-title">Create New Event</div>
+        <div class="form-grid">
+          <div class="form-group"><div class="form-label">Event Title</div><input class="form-input" placeholder="e.g., Stress Management Workshop" /></div>
+          <div class="form-group"><div class="form-label">Type</div><select class="form-input"><option>Workshop</option><option>Seminar</option><option>Webinar</option></select></div>
+          <div class="form-group"><div class="form-label">Date</div><input class="form-input" type="date" /></div>
+          <div class="form-group"><div class="form-label">Time</div><input class="form-input" type="time" /></div>
+        </div>
+        <div class="form-group"><div class="form-label">Description</div><textarea class="form-input" placeholder="Describe the event..."></textarea></div>
+        <div class="form-group"><div class="form-label">Max Capacity</div><input class="form-input" placeholder="e.g., 100" /></div>
+        <button class="btn btn-primary">Create Event</button>
+      </div>
+      <div class="glass card"><div class="card-title">Active Events</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:500;color:#fff">Stress Management</span><span class="tag" style="font-size:9px">Live</span></div><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px">Mar 15, 10:00 AM • 45/100 registered</div><div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.06)"><div style="width:45%;height:100%;border-radius:2px;background:linear-gradient(90deg,#6FFFE9,#5BC0BE)"></div></div></div>
+          <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:500;color:#fff">Mindful Living</span><span class="tag tag-purple" style="font-size:9px">Upcoming</span></div><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px">Mar 18, 2:00 PM • 32/80 registered</div><div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.06)"><div style="width:40%;height:100%;border-radius:2px;background:linear-gradient(90deg,#A78BFA,#C4B5FD)"></div></div></div>
+          <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:500;color:#fff">Dealing with Burnout</span><span class="tag tag-orange" style="font-size:9px">Draft</span></div><div style="font-size:10px;color:rgba(255,255,255,0.3)">Mar 22, 11:00 AM • Not published yet</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== THEORY SESSIONS ===== -->
+  <div class="content-section" id="sec-theory">
+    <div style="display:flex;gap:12px;margin-bottom:20px"><button class="btn btn-primary">+ Create Session</button><button class="btn btn-ghost">Manage Modules</button></div>
+    <div class="glass card"><div class="card-title">Theory Sessions <span class="more">3 active sessions</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div style="padding:18px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div style="font-size:24px;margin-bottom:10px">🧠</div><div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">Understanding Anxiety</div><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:12px">5 modules • 30 min total</div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:6px"><span style="color:rgba(255,255,255,0.35)">245 completions</span><span class="accent">Published</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-ghost" style="flex:1;font-size:10px;padding:6px">Edit</button><button class="btn btn-primary" style="flex:1;font-size:10px;padding:6px">Preview</button></div></div>
+        <div style="padding:18px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div style="font-size:24px;margin-bottom:10px">📘</div><div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">CBT Basics</div><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:12px">8 modules • 45 min total</div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:6px"><span style="color:rgba(255,255,255,0.35)">180 completions</span><span class="accent">Published</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-ghost" style="flex:1;font-size:10px;padding:6px">Edit</button><button class="btn btn-primary" style="flex:1;font-size:10px;padding:6px">Preview</button></div></div>
+        <div style="padding:18px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)"><div style="font-size:24px;margin-bottom:10px">🎯</div><div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">Emotional Regulation</div><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:12px">6 modules • 35 min total</div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:6px"><span style="color:rgba(255,255,255,0.35)">92 completions</span><span style="color:#FFD93D">Draft</span></div><div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-ghost" style="flex:1;font-size:10px;padding:6px">Edit</button><button class="btn btn-ghost" style="flex:1;font-size:10px;padding:6px">Publish</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BULK REGISTER ===== -->
+  <div class="content-section" id="sec-bulk">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="glass card"><div class="card-title">Bulk User Registration</div>
+        <div class="upload-zone" style="margin-bottom:16px"><div style="font-size:32px;margin-bottom:10px">📤</div><div style="font-size:13px;font-weight:500;color:#fff;margin-bottom:4px">Drop CSV or Excel file here</div><div style="font-size:11px;color:rgba(255,255,255,0.3)">or click to browse files</div></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:16px">Supported formats: .csv, .xlsx — Max 10,000 rows per upload</div>
+        <div style="font-size:12px;font-weight:500;color:#fff;margin-bottom:10px">Required Columns:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"><span class="tag" style="font-size:9px">name*</span><span class="tag" style="font-size:9px">email*</span><span class="tag" style="font-size:9px">phone</span><span class="tag" style="font-size:9px">role</span><span class="tag" style="font-size:9px">department</span></div>
+        <div style="display:flex;gap:10px"><button class="btn btn-primary">Upload & Process</button><button class="btn btn-ghost">Download Template</button></div>
+      </div>
+      <div class="glass card"><div class="card-title">Upload History</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:500;color:#fff">batch_march_2026.csv</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">Mar 8 • 450 users • 2 errors</div></div><span class="tag tag-green" style="font-size:9px;background:rgba(74,222,128,0.08);color:#4ADE80;border-color:rgba(74,222,128,0.12)">Completed</span></div>
+          <div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:500;color:#fff">students_sem2.xlsx</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">Mar 5 • 1,200 users • 0 errors</div></div><span class="tag tag-green" style="font-size:9px;background:rgba(74,222,128,0.08);color:#4ADE80;border-color:rgba(74,222,128,0.12)">Completed</span></div>
+          <div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:500;color:#fff">org_users.csv</div><div style="font-size:10px;color:rgba(255,255,255,0.3)">Feb 28 • 800 users • 5 errors</div></div><span class="tag tag-yellow" style="font-size:9px">Partial</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ANALYTICS ===== -->
+  <div class="content-section" id="sec-analytics">
+    <div class="kpi-grid">
+      <div class="glass kpi"><div class="kpi-label">Assessments Taken</div><div class="kpi-value accent">8,234</div><div class="kpi-change up">↑ 18.3% this month</div></div>
+      <div class="glass kpi"><div class="kpi-label">Avg. Completion Time</div><div class="kpi-value" style="color:#A78BFA">4.2m</div><div class="kpi-change down">↓ 0.3m faster</div></div>
+      <div class="glass kpi"><div class="kpi-label">Workshop Attendance</div><div class="kpi-value" style="color:#FFD93D">78%</div><div class="kpi-change up">↑ 5.2% vs last month</div></div>
+      <div class="glass kpi"><div class="kpi-label">Active Daily Users</div><div class="kpi-value" style="color:#FF6B6B">3,456</div><div class="kpi-change up">↑ 22.1% growth</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="glass card"><div class="card-title">Questionnaire Completion by Category <span class="more">Export CSV →</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span>Anxiety</span><span style="color:#6FFFE9">2,450 attempts</span></div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.04)"><div style="width:85%;height:100%;border-radius:3px;background:linear-gradient(90deg,#6FFFE9,#5BC0BE)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span>Depression</span><span style="color:#FF6B6B">1,890 attempts</span></div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.04)"><div style="width:68%;height:100%;border-radius:3px;background:linear-gradient(90deg,#FF6B6B,#FF8E8E)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span>Stress</span><span style="color:#A78BFA">2,100 attempts</span></div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.04)"><div style="width:75%;height:100%;border-radius:3px;background:linear-gradient(90deg,#A78BFA,#C4B5FD)"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span>Self-esteem</span><span style="color:#FFD93D">1,794 attempts</span></div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.04)"><div style="width:62%;height:100%;border-radius:3px;background:linear-gradient(90deg,#FFD93D,#FDE68A)"></div></div></div>
+        </div>
+      </div>
+      <div class="glass card"><div class="card-title">Counsellor Load</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:8px;background:rgba(111,255,233,0.08);display:flex;align-items:center;justify-content:center;font-size:14px">👩‍⚕️</div><div style="flex:1"><div style="font-size:11px;font-weight:500">Dr. Priya Sharma</div><div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:4px"><div style="width:90%;height:100%;border-radius:2px;background:#6FFFE9"></div></div></div><span style="font-size:10px;color:rgba(255,255,255,0.3)">90%</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:8px;background:rgba(255,107,107,0.08);display:flex;align-items:center;justify-content:center;font-size:14px">👨‍⚕️</div><div style="flex:1"><div style="font-size:11px;font-weight:500">Dr. Arjun Mehta</div><div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:4px"><div style="width:65%;height:100%;border-radius:2px;background:#FF6B6B"></div></div></div><span style="font-size:10px;color:rgba(255,255,255,0.3)">65%</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:8px;background:rgba(167,139,250,0.08);display:flex;align-items:center;justify-content:center;font-size:14px">👩‍⚕️</div><div style="flex:1"><div style="font-size:11px;font-weight:500">Dr. Neha Gupta</div><div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:4px"><div style="width:78%;height:100%;border-radius:2px;background:#A78BFA"></div></div></div><span style="font-size:10px;color:rgba(255,255,255,0.3)">78%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const sections = {
+  dashboard:{title:"Dashboard",sub:"Welcome back, Admin. Here's what's happening."},
+  users:{title:"User Management",sub:"Search, filter, edit, and manage all registered users."},
+  counsellors:{title:"Counsellor Management",sub:"Manage counsellor profiles, specializations, and status."},
+  questionnaire:{title:"Questionnaire Builder",sub:"Create categories, levels, questions, and build assessments."},
+  workshops:{title:"Workshops & Events",sub:"Create, schedule, and manage workshops and events."},
+  theory:{title:"Theory Sessions",sub:"Manage educational content and theory session modules."},
+  bulk:{title:"Bulk Registration",sub:"Upload CSV/Excel files to register users in bulk."},
+  analytics:{title:"Analytics",sub:"Data visualization with charts, graphs, and exportable reports."}
+};
+
+function showSection(id) {
+  document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const info = sections[id];
+  document.getElementById('pageHeader').innerHTML = `<div class="page-title">${info.title}</div><div class="page-sub">${info.sub}</div>`;
+}
+</script>
+</body>
+</html>
