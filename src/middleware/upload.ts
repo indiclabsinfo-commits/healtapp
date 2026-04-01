@@ -4,12 +4,13 @@ import fs from 'fs';
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 
-// Ensure upload directory exists
+// Ensure upload directory exists (used for CSV temp files)
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-const storage = multer.diskStorage({
+// CSV files go to disk (temp file — read immediately by service, then discarded)
+const diskStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, UPLOAD_DIR);
   },
@@ -21,7 +22,7 @@ const storage = multer.diskStorage({
 });
 
 export const uploadCSV = multer({
-  storage,
+  storage: diskStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -33,8 +34,10 @@ export const uploadCSV = multer({
   },
 }).single('file');
 
+// Photos go to memory buffer — uploaded to Cloudinary in the controller.
+// Falls back to local disk path in dev if CLOUDINARY_CLOUD_NAME is not set.
 export const uploadPhoto = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {

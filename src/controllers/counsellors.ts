@@ -1,6 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
+import fs from 'fs';
+import path from 'path';
 import * as counsellorService from '../services/counsellors';
 import { successResponse, errorResponse, paginatedResponse } from '../utils/response';
+import { uploadImageBuffer } from '../utils/cloudinary';
+
+/** Resolve photo path: upload to Cloudinary in prod, save to disk in local dev */
+async function resolvePhotoPath(file: Express.Multer.File): Promise<string> {
+  if (process.env.CLOUDINARY_CLOUD_NAME) {
+    return uploadImageBuffer(file.buffer);
+  }
+  // Local dev fallback: write buffer to disk
+  const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
+  if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  const ext = path.extname(file.originalname);
+  const filename = `photo-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), file.buffer);
+  return `/uploads/${filename}`;
+}
 
 export async function listCounsellors(req: Request, res: Response, next: NextFunction) {
   try {
@@ -49,7 +66,7 @@ export async function createCounsellor(req: Request, res: Response, next: NextFu
     if (typeof data.experience === 'string') data.experience = parseInt(data.experience);
     if (typeof data.rating === 'string') data.rating = parseFloat(data.rating);
 
-    const photoPath = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const photoPath = req.file ? await resolvePhotoPath(req.file) : undefined;
     const counsellor = await counsellorService.createCounsellor(data, photoPath);
     successResponse(res, counsellor, 201);
   } catch (error: any) {
@@ -78,7 +95,7 @@ export async function updateCounsellor(req: Request, res: Response, next: NextFu
     if (typeof data.experience === 'string') data.experience = parseInt(data.experience);
     if (typeof data.rating === 'string') data.rating = parseFloat(data.rating);
 
-    const photoPath = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const photoPath = req.file ? await resolvePhotoPath(req.file) : undefined;
     const counsellor = await counsellorService.updateCounsellor(id, data, photoPath);
     successResponse(res, counsellor);
   } catch (error: any) {

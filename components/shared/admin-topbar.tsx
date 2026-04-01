@@ -151,12 +151,12 @@ export function AdminTopbar({ title, subtitle }: AdminTopbarProps) {
               {/* Menu items */}
               <div className="py-1">
                 <button
-                  onClick={() => { setDropdownOpen(false); router.push("/admin/dashboard"); }}
+                  onClick={() => { setDropdownOpen(false); router.push("/profile"); }}
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs transition-colors hover:bg-white/5"
                   style={{ color: "var(--text-secondary)" }}
                 >
                   <User size={14} />
-                  Profile
+                  My Profile
                 </button>
 
                 <button
