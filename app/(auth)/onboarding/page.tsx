@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 const SLIDES = [
@@ -75,61 +76,19 @@ export default function OnboardingPage() {
           <div
             className="flex h-full w-full flex-col items-center justify-center transition-opacity duration-500"
             style={{
-              background: "var(--gradient-splash)",
+              background: "#FFFFFF",
               opacity: splashFading ? 0 : 1,
             }}
           >
-            {/* Floating orb */}
-            <div
-              className="pointer-events-none absolute"
-              style={{
-                width: "200px",
-                height: "200px",
-                borderRadius: "50%",
-                background: "var(--accent-primary)",
-                opacity: 0.06,
-                filter: "blur(60px)",
-                top: "30%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-              }}
+            {/* Logo image (contains brain + ambrin text + by Snowflakes Counselling) */}
+            <Image
+              src="/ambrin-logo.jpeg"
+              alt="ambrin by Snowflakes Counselling"
+              width={280}
+              height={420}
+              priority
+              style={{ objectFit: "contain" }}
             />
-
-            {/* App icon */}
-            <div
-              className="mb-5 flex items-center justify-center"
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "22px",
-                background: "var(--gradient-cta)",
-              }}
-            >
-              <span className="text-[32px]">{"\u{1F9E0}"}</span>
-            </div>
-
-            {/* App name */}
-            <h1
-              className="font-heading text-[32px] font-bold"
-              style={{
-                color: "var(--text-primary)",
-                letterSpacing: "2px",
-              }}
-            >
-              ambrin
-            </h1>
-
-            {/* Subtitle */}
-            <p
-              className="mt-2 font-body uppercase"
-              style={{
-                fontSize: "10px",
-                letterSpacing: "4px",
-                color: "var(--text-muted)",
-              }}
-            >
-              by Snowflakes Counselling
-            </p>
 
             {/* Bottom shimmer bar */}
             <div
@@ -139,7 +98,7 @@ export default function OnboardingPage() {
                 height: "3px",
                 borderRadius: "2px",
                 background:
-                  "linear-gradient(90deg, transparent, var(--accent-primary), transparent)",
+                  "linear-gradient(90deg, transparent, #6FFFE9, transparent)",
                 animation: "shimmer 2s ease-in-out infinite",
               }}
             />

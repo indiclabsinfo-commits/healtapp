@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -28,47 +29,23 @@ export default function Home() {
   return (
     <div
       className="flex min-h-screen flex-col items-center justify-center"
-      style={{ background: "var(--gradient-splash)" }}
+      style={{ background: "#FFFFFF" }}
     >
-      {/* Floating orb */}
-      <div
-        className="absolute rounded-full"
-        style={{
-          width: "200px",
-          height: "200px",
-          background: "var(--accent-primary)",
-          opacity: 0.06,
-          filter: "blur(60px)",
-        }}
+      {/* Logo image (contains brain + ambrin text + by Snowflakes Counselling) */}
+      <Image
+        src="/ambrin-logo.jpeg"
+        alt="ambrin by Snowflakes Counselling"
+        width={280}
+        height={420}
+        priority
+        style={{ objectFit: "contain" }}
       />
-
-      {/* App icon */}
-      <div
-        className="mb-4 flex h-[72px] w-[72px] items-center justify-center rounded-[22px] text-3xl"
-        style={{ background: "var(--gradient-cta)" }}
-      >
-        🧠
-      </div>
-
-      {/* App name */}
-      <h1
-        className="font-heading text-[32px] font-bold tracking-[2px]"
-        style={{ color: "var(--text-primary)" }}
-      >
-        ambrin
-      </h1>
-      <p
-        className="mt-2 text-[10px] uppercase tracking-[4px]"
-        style={{ color: "var(--text-muted)" }}
-      >
-        by Snowflakes Counselling
-      </p>
 
       {/* Bottom shimmer */}
       <div
         className="absolute bottom-16 h-[3px] w-[40px] rounded-full"
         style={{
-          background: "linear-gradient(90deg, transparent, var(--accent-primary), transparent)",
+          background: "linear-gradient(90deg, transparent, #6FFFE9, transparent)",
           animation: showSplash ? "shimmer 1.5s ease-in-out infinite" : "none",
         }}
       />
