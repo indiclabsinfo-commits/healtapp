@@ -190,6 +190,7 @@ model Questionnaire {
   levelId     Int
   questionIds Json
   published   Boolean      @default(false)
+  language    String       @default("en")  // "en" | "hi" | "gu"
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   assessments Assessment[]

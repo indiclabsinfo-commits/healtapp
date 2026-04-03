@@ -54,7 +54,7 @@ export default function OnboardingPage() {
 
   function handleNext() {
     if (isLast) {
-      localStorage.setItem("mindcare-onboarded", "true");
+      localStorage.setItem("ambrin-onboarded", "true");
       router.push("/login");
     } else {
       setCurrentSlide((prev) => prev + 1);
@@ -62,7 +62,7 @@ export default function OnboardingPage() {
   }
 
   function handleSkip() {
-    localStorage.setItem("mindcare-onboarded", "true");
+    localStorage.setItem("ambrin-onboarded", "true");
     router.push("/login");
   }
 
@@ -116,7 +116,7 @@ export default function OnboardingPage() {
                 letterSpacing: "2px",
               }}
             >
-              MindCare
+              ambrin
             </h1>
 
             {/* Subtitle */}
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
                 color: "var(--text-muted)",
               }}
             >
-              your mind matters
+              by Snowflakes Counselling
             </p>
 
             {/* Bottom shimmer bar */}

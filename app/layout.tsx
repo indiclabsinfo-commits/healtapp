@@ -3,8 +3,8 @@ import { ThemeProvider } from "@/components/shared/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MindCare — Your Mind Matters",
-  description: "Counselling & Wellness Platform by Indic Labs",
+  title: "ambrin — by Snowflakes Counselling",
+  description: "Counselling & Wellness Platform by Snowflakes Counselling",
 };
 
 export default function RootLayout({

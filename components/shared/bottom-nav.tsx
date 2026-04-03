@@ -19,7 +19,8 @@ export function BottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t"
       style={{
-        height: "70px",
+        height: "calc(70px + env(safe-area-inset-bottom, 0px))",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
         background: "var(--nav-bg)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",

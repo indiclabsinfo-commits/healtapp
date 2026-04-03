@@ -144,7 +144,7 @@ export function AdminTopbar({ title, subtitle }: AdminTopbarProps) {
                   {user?.name || "Admin User"}
                 </p>
                 <p className="mt-0.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
-                  {user?.email || "admin@mindcare.com"}
+                  {user?.email || "admin@ambrin.app"}
                 </p>
               </div>
 

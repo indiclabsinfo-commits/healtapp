@@ -30,7 +30,7 @@ export default function AdminAnalyticsPage() {
       const url = window.URL.createObjectURL(new Blob([blob]));
       const a = document.createElement("a");
       a.href = url;
-      a.download = "mindcare-analytics.csv";
+      a.download = "ambrin-analytics.csv";
       a.click();
       window.URL.revokeObjectURL(url);
     } catch { setError("Failed to export"); }

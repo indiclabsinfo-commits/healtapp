@@ -27,9 +27,18 @@ export async function submitAssessment(userId: number, data: {
     const options = q.options as any;
 
     if (q.type === 'MCQ') {
-      maxPoints += 1;
-      if (options.correct !== undefined && userAnswer.answer === options.correct) {
-        totalPoints += 1;
+      // Scored MCQ (e.g. GAD-7, PHQ-9): options are [{text, score}, ...]
+      if (Array.isArray(options) && options.length > 0 && options[0]?.score !== undefined) {
+        const maxScore = Math.max(...options.map((o: any) => Number(o.score) || 0));
+        maxPoints += maxScore;
+        const chosen = options.find((o: any) => o.text === userAnswer.answer);
+        totalPoints += chosen ? Number(chosen.score) || 0 : 0;
+      } else {
+        // Traditional correct/wrong MCQ
+        maxPoints += 1;
+        if (options.correct !== undefined && userAnswer.answer === options.correct) {
+          totalPoints += 1;
+        }
       }
     } else if (q.type === 'SCALE') {
       const max = options.max || 10;

@@ -144,15 +144,48 @@ export default function AssessmentPage() {
     ? currentQuestion.type === "SCALE" || answers[currentQuestion.id] !== undefined
     : false;
 
+  // Score interpretation for clinical scales (higher score = more symptoms)
+  function getScoreInterpretation(pct: number): {
+    level: string; color: string; message: string; action: string | null;
+  } {
+    if (pct <= 20) return {
+      level: "Minimal",
+      color: "#4ADE80",
+      message: "You appear to be doing well. Keep up your self-care practices.",
+      action: null,
+    };
+    if (pct <= 44) return {
+      level: "Mild",
+      color: "#FFD93D",
+      message: "Some mild symptoms noted. Try breathing exercises and theory sessions.",
+      action: null,
+    };
+    if (pct <= 67) return {
+      level: "Moderate",
+      color: "#FF9F40",
+      message: "Moderate symptoms detected. Talking to a counsellor can really help.",
+      action: "contact",
+    };
+    return {
+      level: "High",
+      color: "#FF6B6B",
+      message: "Significant symptoms detected. We strongly recommend reaching out to a counsellor.",
+      action: "contact",
+    };
+  }
+
   // --- RESULT SCREEN ---
   if (showResult && quizMode) {
+    const pct = score !== null ? Math.round(score) : 0;
+    const interpretation = getScoreInterpretation(pct);
+
     return (
       <div className="flex flex-col items-center pt-12">
         <div
           className="mb-6 flex h-20 w-20 items-center justify-center rounded-[24px]"
-          style={{ background: "var(--tag-bg)" }}
+          style={{ background: `${interpretation.color}18` }}
         >
-          <CheckCircle2 size={40} style={{ color: "var(--accent-primary)" }} />
+          <CheckCircle2 size={40} style={{ color: interpretation.color }} />
         </div>
         <h1
           className="font-heading text-[24px] font-semibold"
@@ -161,25 +194,47 @@ export default function AssessmentPage() {
           Assessment Complete
         </h1>
         <p className="mt-2 text-[13px]" style={{ color: "var(--text-muted)" }}>
-          Here are your results
+          {activeQuiz?.title}
         </p>
 
         <div className="glass-card mt-8 w-full max-w-sm p-6 text-center">
           <p className="text-[11px] font-medium uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
-            Your Score
+            Symptom Level
           </p>
           <p
             className="font-heading mt-2 text-[48px] font-bold"
-            style={{ color: "var(--accent-primary)" }}
+            style={{ color: interpretation.color }}
           >
-            {score !== null ? `${Math.round(score)}%` : "--"}
+            {interpretation.level}
           </p>
-          <p className="mt-2 text-[12px]" style={{ color: "var(--text-secondary)" }}>
-            {activeQuiz?.title}
+          <p className="mt-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
+            Score: {pct}%
           </p>
+          <div
+            className="mt-4 rounded-[12px] p-3"
+            style={{ background: `${interpretation.color}12`, border: `1px solid ${interpretation.color}25` }}
+          >
+            <p className="text-[12px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              {interpretation.message}
+            </p>
+          </div>
         </div>
 
-        <button onClick={exitQuiz} className="cta-button mt-8 max-w-sm">
+        {interpretation.action === "contact" && (
+          <a
+            href="mailto:hello@snowflakescounselling.com?subject=Counselling%20Enquiry"
+            className="cta-button mt-5 max-w-sm flex items-center justify-center gap-2 no-underline"
+            style={{ textDecoration: "none" }}
+          >
+            Connect with Snowflakes Counselling
+          </a>
+        )}
+
+        <button
+          onClick={exitQuiz}
+          className="mt-4 max-w-sm text-[13px] font-medium"
+          style={{ color: "var(--text-muted)" }}
+        >
           Back to Assessments
         </button>
       </div>

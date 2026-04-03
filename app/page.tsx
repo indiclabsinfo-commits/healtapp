@@ -17,7 +17,7 @@ export default function Home() {
       if (isAuthenticated) {
         router.push(isAdmin ? "/admin/dashboard" : "/dashboard");
       } else {
-        const onboarded = localStorage.getItem("mindcare-onboarded");
+        const onboarded = localStorage.getItem("ambrin-onboarded");
         router.push(onboarded ? "/login" : "/onboarding");
       }
     }, 1500);
@@ -55,13 +55,13 @@ export default function Home() {
         className="font-heading text-[32px] font-bold tracking-[2px]"
         style={{ color: "var(--text-primary)" }}
       >
-        MindCare
+        ambrin
       </h1>
       <p
         className="mt-2 text-[10px] uppercase tracking-[4px]"
         style={{ color: "var(--text-muted)" }}
       >
-        your mind matters
+        by Snowflakes Counselling
       </p>
 
       {/* Bottom shimmer */}

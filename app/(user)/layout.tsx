@@ -37,7 +37,7 @@ export default function UserLayout({
       >
         <ThemeToggle size="sm" />
       </header>
-      <main className="px-5 pb-24 pt-[64px] md:px-10">{children}</main>
+      <main className="px-5 pt-[64px] md:px-10" style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}>{children}</main>
       <BottomNav />
     </div>
   );

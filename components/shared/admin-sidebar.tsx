@@ -41,8 +41,6 @@ const superAdminNav: NavItem[] = [
 const orgAdminNav: NavItem[] = [
   { href: "/admin/users", label: "Members", icon: Users },
   { href: "/admin/counsellors", label: "Counsellors", icon: UserCheck },
-  { href: "/admin/assignments", label: "Assignments", icon: FileText },
-  { href: "/admin/credits", label: "Credits", icon: CreditCard },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
@@ -57,8 +55,6 @@ const teacherNav: NavItem[] = [
 // HR sees employee-focused items
 const hrNav: NavItem[] = [
   { href: "/admin/users", label: "Employees", icon: Users },
-  { href: "/admin/assignments", label: "Assignments", icon: FileText },
-  { href: "/admin/credits", label: "Credits", icon: CreditCard },
   { href: "/admin/analytics", label: "Wellness Reports", icon: BarChart3 },
 ];
 
@@ -139,7 +135,7 @@ export function AdminSidebar() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🧠</span>
             <span className="font-heading text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
-              MindCare
+              ambrin
             </span>
           </div>
           <button onClick={() => setMobileOpen(false)} className="lg:hidden" style={{ color: "var(--text-muted)" }}>

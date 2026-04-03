@@ -140,7 +140,7 @@ export default function OrgCodePage() {
 
       {/* Super Admin link */}
       <p className="mt-8 text-[12px]" style={{ color: "var(--text-muted)" }}>
-        MindCare Admin?{" "}
+        ambrin Admin?{" "}
         <Link href="/login" style={{ color: "var(--accent-primary)" }}>
           Sign in directly
         </Link>

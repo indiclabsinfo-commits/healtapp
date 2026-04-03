@@ -256,7 +256,159 @@ async function main() {
     console.log('Created 1 questionnaire');
   }
 
-  // 6. Create 2 Theory Sessions
+  // 6. Create GAD-7 and PHQ-9 Clinical Assessments (English + Hindi + Gujarati)
+  const clinicalCategory = await prisma.category.create({
+    data: {
+      name: 'Clinical Assessments',
+      description: 'Validated clinical screening tools — GAD-7 (anxiety) and PHQ-9 (depression).',
+    },
+  });
+
+  const stdOptions = JSON.stringify([
+    { text: 'Not at all', score: 0 },
+    { text: 'Several days', score: 1 },
+    { text: 'More than half the days', score: 2 },
+    { text: 'Nearly every day', score: 3 },
+  ]);
+  const stdOptionsHi = JSON.stringify([
+    { text: 'बिल्कुल नहीं', score: 0 },
+    { text: 'कई दिनों से', score: 1 },
+    { text: 'आधे से अधिक दिनों से', score: 2 },
+    { text: 'लगभग हर दिन', score: 3 },
+  ]);
+  const stdOptionsGu = JSON.stringify([
+    { text: 'બિલ્કુલ નહીં', score: 0 },
+    { text: 'ઘણા દિવસો', score: 1 },
+    { text: 'અડધા કરતા વધુ દિવસ', score: 2 },
+    { text: 'લગભગ દરરોજ', score: 3 },
+  ]);
+
+  // --- GAD-7 Level (English) ---
+  const gad7LevelEn = await prisma.level.create({
+    data: {
+      name: 'GAD-7 (English)',
+      order: 1,
+      categoryId: clinicalCategory.id,
+      questions: {
+        create: [
+          { text: 'Feeling nervous, anxious or on edge', type: 'MCQ', options: stdOptions },
+          { text: 'Not being able to stop or control worrying', type: 'MCQ', options: stdOptions },
+          { text: 'Worrying too much about different things', type: 'MCQ', options: stdOptions },
+          { text: 'Trouble relaxing', type: 'MCQ', options: stdOptions },
+          { text: 'Being so restless that it is hard to sit still', type: 'MCQ', options: stdOptions },
+          { text: 'Becoming easily annoyed or irritable', type: 'MCQ', options: stdOptions },
+          { text: 'Feeling afraid as if something awful might happen', type: 'MCQ', options: stdOptions },
+        ],
+      },
+    },
+    include: { questions: true },
+  });
+
+  // --- GAD-7 Level (Hindi) ---
+  const gad7LevelHi = await prisma.level.create({
+    data: {
+      name: 'GAD-7 (Hindi)',
+      order: 2,
+      categoryId: clinicalCategory.id,
+      questions: {
+        create: [
+          { text: 'घबराहट, बेचैनी, या चिंता महसूस करना', type: 'MCQ', options: stdOptionsHi },
+          { text: 'चिंता को रोक या नियंत्रित न कर पाना', type: 'MCQ', options: stdOptionsHi },
+          { text: 'कई अलग-अलग चीज़ों के बारे में ज़्यादा चिंता करना', type: 'MCQ', options: stdOptionsHi },
+          { text: 'आराम करने में परेशानी', type: 'MCQ', options: stdOptionsHi },
+          { text: 'इतना बेचैन होना कि बैठे रहना मुश्किल हो', type: 'MCQ', options: stdOptionsHi },
+          { text: 'आसानी से चिड़चिड़ाना या परेशान हो जाना', type: 'MCQ', options: stdOptionsHi },
+          { text: 'कुछ बुरा होने के डर से डरा हुआ महसूस करना', type: 'MCQ', options: stdOptionsHi },
+        ],
+      },
+    },
+    include: { questions: true },
+  });
+
+  // --- GAD-7 Level (Gujarati) ---
+  const gad7LevelGu = await prisma.level.create({
+    data: {
+      name: 'GAD-7 (Gujarati)',
+      order: 3,
+      categoryId: clinicalCategory.id,
+      questions: {
+        create: [
+          { text: 'ગભરાટ, ચિંતા અથવા ઉદ્વેગ અનુભવવો', type: 'MCQ', options: stdOptionsGu },
+          { text: 'ચિંતા અટકાવી કે નિયંત્રિત ન કરી શકવી', type: 'MCQ', options: stdOptionsGu },
+          { text: 'જુદી-જુદી બાબતોની ઘણી વધારે ચિંતા કરવી', type: 'MCQ', options: stdOptionsGu },
+          { text: 'આરામ કરવામાં તકલીફ', type: 'MCQ', options: stdOptionsGu },
+          { text: 'એટલો બેચૈન હોવો કે બેઠા રહેવું મુશ્કેલ', type: 'MCQ', options: stdOptionsGu },
+          { text: 'સહેલાઈથી ચીઢ ચડવી અથવા ઉશ્કેરાઈ જવું', type: 'MCQ', options: stdOptionsGu },
+          { text: 'ડર લાગવો જાણે કઈ ભયંકર ઘટના બનવાની છે', type: 'MCQ', options: stdOptionsGu },
+        ],
+      },
+    },
+    include: { questions: true },
+  });
+
+  // --- PHQ-9 Level (English) ---
+  const phq9LevelEn = await prisma.level.create({
+    data: {
+      name: 'PHQ-9 (English)',
+      order: 4,
+      categoryId: clinicalCategory.id,
+      questions: {
+        create: [
+          { text: 'Little interest or pleasure in doing things', type: 'MCQ', options: stdOptions },
+          { text: 'Feeling down, depressed, or hopeless', type: 'MCQ', options: stdOptions },
+          { text: 'Trouble falling or staying asleep, or sleeping too much', type: 'MCQ', options: stdOptions },
+          { text: 'Feeling tired or having little energy', type: 'MCQ', options: stdOptions },
+          { text: 'Poor appetite or overeating', type: 'MCQ', options: stdOptions },
+          { text: 'Feeling bad about yourself — or that you are a failure or have let yourself or your family down', type: 'MCQ', options: stdOptions },
+          { text: 'Trouble concentrating on things, such as reading or watching television', type: 'MCQ', options: stdOptions },
+          { text: 'Moving or speaking so slowly others could have noticed? Or the opposite — being so fidgety or restless you have been moving around more than usual', type: 'MCQ', options: stdOptions },
+          { text: 'Thoughts that you would be better off dead, or thoughts of hurting yourself in some way', type: 'MCQ', options: stdOptions },
+        ],
+      },
+    },
+    include: { questions: true },
+  });
+
+  // Create published questionnaires for each language
+  await prisma.questionnaire.createMany({
+    data: [
+      {
+        title: 'GAD-7 Anxiety Scale (English)',
+        categoryId: clinicalCategory.id,
+        levelId: gad7LevelEn.id,
+        questionIds: JSON.stringify(gad7LevelEn.questions.map((q) => q.id)),
+        published: true,
+        language: 'en',
+      },
+      {
+        title: 'GAD-7 चिंता मापनी (Hindi)',
+        categoryId: clinicalCategory.id,
+        levelId: gad7LevelHi.id,
+        questionIds: JSON.stringify(gad7LevelHi.questions.map((q) => q.id)),
+        published: true,
+        language: 'hi',
+      },
+      {
+        title: 'GAD-7 ચિંતા સ્કેલ (Gujarati)',
+        categoryId: clinicalCategory.id,
+        levelId: gad7LevelGu.id,
+        questionIds: JSON.stringify(gad7LevelGu.questions.map((q) => q.id)),
+        published: true,
+        language: 'gu',
+      },
+      {
+        title: 'PHQ-9 Depression Scale (English)',
+        categoryId: clinicalCategory.id,
+        levelId: phq9LevelEn.id,
+        questionIds: JSON.stringify(phq9LevelEn.questions.map((q) => q.id)),
+        published: true,
+        language: 'en',
+      },
+    ],
+  });
+  console.log('Created GAD-7 (EN/HI/GU) + PHQ-9 (EN) clinical questionnaires');
+
+  // 7. Create 2 Theory Sessions
   await prisma.theorySession.createMany({
     data: [
       {
