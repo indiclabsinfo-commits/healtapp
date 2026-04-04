@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Animated,
   Alert,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -546,17 +547,19 @@ function ResultScreen({
     }).start();
   }, [scaleAnim]);
 
-  const getScoreColor = () => {
-    if (score >= 75) return colors.accentGreen;
-    if (score >= 50) return colors.accentYellow;
-    return colors.accentRed;
+  const getInterpretation = () => {
+    if (score <= 20) return { label: 'Minimal', color: colors.accentGreen, showContact: false };
+    if (score <= 44) return { label: 'Mild', color: colors.accentYellow, showContact: false };
+    if (score <= 67) return { label: 'Moderate', color: '#FB923C', showContact: true };
+    return { label: 'High', color: colors.accentRed, showContact: true };
   };
 
-  const getScoreLabel = () => {
-    if (score >= 75) return 'Excellent';
-    if (score >= 50) return 'Moderate';
-    if (score >= 25) return 'Needs Attention';
-    return 'Seek Support';
+  const interpretation = getInterpretation();
+
+  const handleContact = () => {
+    const subject = encodeURIComponent('Counselling Enquiry — ambrin');
+    const body = encodeURIComponent('Hello,\n\nI completed a wellness assessment and would like to speak with a counsellor.\n\nThank you.');
+    Linking.openURL(`mailto:hello@snowflakescounselling.com?subject=${subject}&body=${body}`);
   };
 
   return (
@@ -570,21 +573,33 @@ function ResultScreen({
         <View
           style={[
             styles.scoreCircle,
-            { borderColor: getScoreColor() },
+            { borderColor: interpretation.color },
           ]}
         >
-          <Text style={[styles.scoreText, { color: getScoreColor() }]}>
+          <Text style={[styles.scoreText, { color: interpretation.color }]}>
             {Math.round(score)}%
           </Text>
         </View>
 
         <Text style={styles.resultTitle}>Assessment Complete</Text>
-        <Text style={[styles.resultLabel, { color: getScoreColor() }]}>
-          {getScoreLabel()}
+        <Text style={[styles.resultLabel, { color: interpretation.color }]}>
+          {interpretation.label}
         </Text>
         <Text style={styles.resultSubtitle}>
           Your wellness score has been recorded. Check your analytics for trends over time.
         </Text>
+
+        {interpretation.showContact && (
+          <TouchableOpacity
+            onPress={handleContact}
+            activeOpacity={0.8}
+            style={styles.contactCta}
+          >
+            <Text style={styles.contactCtaText}>
+              Connect with Snowflakes Counselling →
+            </Text>
+          </TouchableOpacity>
+        )}
       </Animated.View>
 
       <View style={styles.bottomAction}>
@@ -1014,5 +1029,20 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  contactCta: {
+    marginTop: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.accentPrimary,
+    backgroundColor: 'rgba(111,255,233,0.08)',
+  },
+  contactCtaText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.accentPrimary,
+    textAlign: 'center',
   },
 });

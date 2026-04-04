@@ -1,22 +1,22 @@
 {
   "expo": {
-    "name": "MindCare",
-    "slug": "mindcare",
+    "name": "ambrin",
+    "slug": "ambrin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/ambrin-logo.jpeg",
       "resizeMode": "contain",
-      "backgroundColor": "#0B0C10"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.indiclabs.mindcare"
+      "bundleIdentifier": "com.indiclabs.ambrin"
     },
     "android": {
-      "package": "com.indiclabs.mindcare",
+      "package": "com.indiclabs.ambrin",
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
