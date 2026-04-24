@@ -1,207 +1,297 @@
 #!/bin/bash
-# ============================================
-# MindCare — Oracle Cloud Deployment Script
-# Run this on a fresh Ubuntu 22.04 Oracle VM
-# ============================================
+# ================================================================
+#  ambrin by Snowflakes Counselling
+#  Oracle Cloud Ubuntu 22.04 ARM — Full Server Setup Script
+#
+#  Run once on a fresh Oracle Cloud Ampere A1 VM.
+#  Installs: Node.js 20, PostgreSQL 15, Nginx, PM2, Certbot
+#
+#  Usage:
+#    chmod +x oracle-setup.sh
+#    ./oracle-setup.sh
+# ================================================================
 
 set -e
 
-echo "=============================="
-echo "  MindCare Server Setup"
-echo "=============================="
-
-# --- CONFIGURATION ---
-# Change these before running
-APP_DOMAIN="app.mindcare.in"
-API_DOMAIN="api.mindcare.in"
-DB_NAME="mindcare"
-DB_USER="mindcare"
-DB_PASS="your_strong_password_here"  # CHANGE THIS
-APP_DIR="/home/ubuntu/mindcare"
+# ── CONFIGURATION — edit before running ──────────────────────────
+APP_DOMAIN="app.ambrin.in"        # Your web app domain
+API_DOMAIN="api.ambrin.in"        # Your API domain (can be same domain with /api path)
+DB_NAME="ambrin"
+DB_USER="ambrin"
+DB_PASS="$(openssl rand -base64 24)"   # Auto-generated strong password
+APP_DIR="/home/ubuntu/ambrin"
+GITHUB_REPO="https://github.com/indiclabsinfo-commits/healtapp.git"
 NODE_VERSION="20"
+# ─────────────────────────────────────────────────────────────────
 
-# --- 1. SYSTEM UPDATE ---
-echo "[1/8] Updating system..."
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl git nginx certbot python3-certbot-nginx ufw
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-# --- 2. INSTALL NODE.JS ---
-echo "[2/8] Installing Node.js ${NODE_VERSION}..."
-curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -
-sudo apt install -y nodejs
-sudo npm install -g pm2
+log()  { echo -e "${GREEN}[✓]${NC} $1"; }
+warn() { echo -e "${YELLOW}[!]${NC} $1"; }
+err()  { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 
-echo "Node: $(node -v)"
-echo "NPM: $(npm -v)"
+echo ""
+echo "================================================================"
+echo "  ambrin — Oracle Cloud Server Setup"
+echo "================================================================"
+echo ""
+warn "This script will set up the full ambrin server."
+warn "Estimated time: 10–15 minutes"
+echo ""
 
-# --- 3. INSTALL MYSQL ---
-echo "[3/8] Installing MySQL 8..."
-sudo apt install -y mysql-server
+# Save DB password before we generate it once
+DB_PASS_SAVED="$DB_PASS"
 
-sudo mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
-sudo mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-sudo mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';"
-sudo mysql -e "FLUSH PRIVILEGES;"
+# ── 1. SYSTEM UPDATE ─────────────────────────────────────────────
+log "Step 1/9 — Updating system packages..."
+sudo apt update -qq && sudo apt upgrade -y -qq
+sudo apt install -y -qq curl git nginx certbot python3-certbot-nginx ufw \
+     build-essential libssl-dev openssl jq
 
-echo "MySQL database '${DB_NAME}' created."
+# ── 2. INSTALL NODE.JS 20 ────────────────────────────────────────
+log "Step 2/9 — Installing Node.js ${NODE_VERSION}..."
+curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash - > /dev/null
+sudo apt install -y -qq nodejs
+sudo npm install -g pm2 tsx 2>/dev/null
+log "Node: $(node -v) | NPM: $(npm -v)"
 
-# --- 4. CLONE & SETUP APP ---
-echo "[4/8] Setting up application..."
-mkdir -p ${APP_DIR}
-cd ${APP_DIR}
+# ── 3. INSTALL POSTGRESQL 15 ─────────────────────────────────────
+log "Step 3/9 — Installing PostgreSQL 15..."
+sudo apt install -y -qq postgresql postgresql-contrib
 
-# If repo exists, pull latest; otherwise clone
-if [ -d ".git" ]; then
-  git pull origin main
+# Start and enable PostgreSQL
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+
+# Create database and user
+sudo -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS_SAVED}';" 2>/dev/null || \
+  sudo -u postgres psql -c "ALTER USER ${DB_USER} WITH PASSWORD '${DB_PASS_SAVED}';"
+
+sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};" 2>/dev/null || true
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+
+# Enable pg_trgm for search
+sudo -u postgres psql -d ${DB_NAME} -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;" 2>/dev/null || true
+
+log "PostgreSQL database '${DB_NAME}' ready."
+
+# ── 4. CLONE APPLICATION ─────────────────────────────────────────
+log "Step 4/9 — Cloning application..."
+sudo mkdir -p ${APP_DIR}
+sudo chown ubuntu:ubuntu ${APP_DIR}
+
+if [ -d "${APP_DIR}/.git" ]; then
+  cd ${APP_DIR} && git pull origin main
+  log "Repository updated."
 else
-  echo "Copy your project files to ${APP_DIR}"
-  echo "Example: scp -r ./healthapp/* ubuntu@your-server:${APP_DIR}/"
-  echo "Then re-run this script."
+  git clone ${GITHUB_REPO} ${APP_DIR} || {
+    warn "Git clone failed — you may need to manually copy the project:"
+    warn "  scp -r ./healthapp ubuntu@<your-server-ip>:${APP_DIR}"
+    warn "Then re-run this script from Step 4 onward."
+    mkdir -p ${APP_DIR}
+  }
 fi
 
-# --- 5. CONFIGURE ENVIRONMENT ---
-echo "[5/8] Creating .env file..."
-cat > ${APP_DIR}/.env << EOF
-DATABASE_URL=mysql://${DB_USER}:${DB_PASS}@localhost:3306/${DB_NAME}
-JWT_SECRET=$(openssl rand -base64 32)
-JWT_REFRESH_SECRET=$(openssl rand -base64 32)
+# ── 5. ENVIRONMENT FILE ──────────────────────────────────────────
+log "Step 5/9 — Creating production .env..."
+
+JWT_SECRET=$(openssl rand -base64 48)
+JWT_REFRESH=$(openssl rand -base64 48)
+
+cat > ${APP_DIR}/.env << ENVEOF
+# ── Database ──────────────────────────────────────────────────────
+DATABASE_URL=postgresql://${DB_USER}:${DB_PASS_SAVED}@localhost:5432/${DB_NAME}?schema=public
+
+# ── JWT Auth ──────────────────────────────────────────────────────
+JWT_SECRET=${JWT_SECRET}
+JWT_REFRESH_SECRET=${JWT_REFRESH}
 JWT_ACCESS_EXPIRY=15m
 JWT_REFRESH_EXPIRY=7d
-PORT=3001
-CORS_ORIGIN=https://${APP_DOMAIN}
-NODE_ENV=production
-UPLOAD_DIR=./uploads
 
-# SMTP — configure for password reset emails
+# ── Server ────────────────────────────────────────────────────────
+PORT=3001
+NODE_ENV=production
+CORS_ORIGIN=https://${APP_DOMAIN}
+
+# ── File Uploads ──────────────────────────────────────────────────
+UPLOAD_DIR=./uploads
+# Optional: Cloudinary (for persistent photo storage across deploys)
+# CLOUDINARY_CLOUD_NAME=your-cloud-name
+# CLOUDINARY_API_KEY=your-key
+# CLOUDINARY_API_SECRET=your-secret
+
+# ── Email (for password reset) ────────────────────────────────────
 # SMTP_HOST=smtp.gmail.com
 # SMTP_PORT=587
-# SMTP_USER=noreply@mindcare.in
+# SMTP_USER=noreply@snowflakescounselling.com
 # SMTP_PASS=your-app-password
-EOF
+ENVEOF
 
-echo ".env created. Edit SMTP settings: nano ${APP_DIR}/.env"
+log ".env created."
 
-# --- 6. BUILD & DEPLOY ---
-echo "[6/8] Installing dependencies & building..."
+# ── 6. INSTALL DEPENDENCIES & BUILD ──────────────────────────────
+log "Step 6/9 — Installing Node.js dependencies..."
 cd ${APP_DIR}
-npm install --production=false
+npm install --no-audit --no-fund 2>/dev/null
 
-# Run database migrations
+log "Running database migrations..."
 npx prisma migrate deploy
 npx prisma generate
 
-# Seed database (first time only)
+# Seed database (only on first setup)
 if [ ! -f "${APP_DIR}/.seeded" ]; then
-  npx tsx prisma/seed.ts
-  touch ${APP_DIR}/.seeded
-  echo "Database seeded."
+  log "Seeding database with initial data..."
+  npx tsx prisma/seed.ts && touch ${APP_DIR}/.seeded
+  log "Database seeded successfully."
+else
+  log "Database already seeded — skipping."
 fi
 
-# Build Next.js static export
-# Uncomment output: 'export' in next.config.js first
+log "Building Next.js frontend..."
 npm run build
 
 # Create uploads directory
 mkdir -p ${APP_DIR}/uploads
+chmod 755 ${APP_DIR}/uploads
 
-# --- 7. CONFIGURE NGINX ---
-echo "[7/8] Configuring Nginx..."
+# ── 7. PM2 PROCESS MANAGER ───────────────────────────────────────
+log "Step 7/9 — Configuring PM2..."
+cd ${APP_DIR}
 
-# API reverse proxy
-sudo tee /etc/nginx/sites-available/${API_DOMAIN} > /dev/null << EOF
+pm2 delete ambrin-api 2>/dev/null || true
+pm2 start ecosystem.config.js
+pm2 save
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu 2>/dev/null || true
+sudo systemctl enable pm2-ubuntu 2>/dev/null || true
+
+# ── 8. NGINX ─────────────────────────────────────────────────────
+log "Step 8/9 — Configuring Nginx..."
+
+# API virtual host
+sudo tee /etc/nginx/sites-available/ambrin-api > /dev/null << 'NGINXAPI'
 server {
     listen 80;
-    server_name ${API_DOMAIN};
+    server_name API_DOMAIN_PLACEHOLDER;
 
-    client_max_body_size 10M;
+    client_max_body_size 20M;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options "nosniff";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
 
     location / {
         proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 60s;
     }
 }
-EOF
+NGINXAPI
+sudo sed -i "s/API_DOMAIN_PLACEHOLDER/${API_DOMAIN}/g" /etc/nginx/sites-available/ambrin-api
 
-# Frontend static files
-sudo tee /etc/nginx/sites-available/${APP_DOMAIN} > /dev/null << EOF
+# Frontend virtual host
+sudo tee /etc/nginx/sites-available/ambrin-app > /dev/null << 'NGINXAPP'
 server {
     listen 80;
-    server_name ${APP_DOMAIN};
+    server_name APP_DOMAIN_PLACEHOLDER;
 
-    root ${APP_DIR}/out;
+    root APP_DIR_PLACEHOLDER/out;
     index index.html;
 
-    # Handle Next.js static export routing
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options "nosniff";
+
+    # Next.js static export routing
     location / {
-        try_files \$uri \$uri.html \$uri/ /index.html;
+        try_files $uri $uri.html $uri/ /index.html;
     }
 
-    # Cache static assets
+    # Cache static assets aggressively
     location /_next/static/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
+    # Uploads proxied to API
     location /uploads/ {
         proxy_pass http://localhost:3001/uploads/;
     }
-}
-EOF
 
-sudo ln -sf /etc/nginx/sites-available/${API_DOMAIN} /etc/nginx/sites-enabled/
-sudo ln -sf /etc/nginx/sites-available/${APP_DOMAIN} /etc/nginx/sites-enabled/
+    # Gzip
+    gzip on;
+    gzip_vary on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+}
+NGINXAPP
+sudo sed -i "s/APP_DOMAIN_PLACEHOLDER/${APP_DOMAIN}/g" /etc/nginx/sites-available/ambrin-app
+sudo sed -i "s|APP_DIR_PLACEHOLDER|${APP_DIR}|g" /etc/nginx/sites-available/ambrin-app
+
+sudo ln -sf /etc/nginx/sites-available/ambrin-api /etc/nginx/sites-enabled/
+sudo ln -sf /etc/nginx/sites-available/ambrin-app /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
+log "Nginx configured."
 
-# --- 8. START WITH PM2 ---
-echo "[8/8] Starting API with PM2..."
-cd ${APP_DIR}
-pm2 delete mindcare-api 2>/dev/null || true
-pm2 start src/server.ts --name mindcare-api --interpreter npx --interpreter-args "tsx"
-pm2 save
-pm2 startup systemd -u ubuntu --hp /home/ubuntu
-
-# --- FIREWALL ---
-echo "Configuring firewall..."
-sudo ufw allow 22/tcp    # SSH
-sudo ufw allow 80/tcp    # HTTP
-sudo ufw allow 443/tcp   # HTTPS
+# ── 9. FIREWALL ───────────────────────────────────────────────────
+log "Step 9/9 — Configuring firewall..."
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
 sudo ufw --force enable
+log "Firewall enabled."
 
-# --- SSL (run after DNS is pointed) ---
+# ── SUMMARY ───────────────────────────────────────────────────────
+SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || echo "unknown")
+
 echo ""
-echo "=============================="
-echo "  Setup Complete!"
-echo "=============================="
+echo "================================================================"
+echo "  ambrin Server Setup Complete!"
+echo "================================================================"
 echo ""
-echo "NEXT STEPS:"
+echo "  Server IP:  ${SERVER_IP}"
+echo "  App domain: ${APP_DOMAIN}"
+echo "  API domain: ${API_DOMAIN}"
 echo ""
-echo "1. Point DNS records in Squarespace:"
-echo "   ${APP_DOMAIN} → A record → $(curl -s ifconfig.me)"
-echo "   ${API_DOMAIN} → A record → $(curl -s ifconfig.me)"
+echo "  DB Name:    ${DB_NAME}"
+echo "  DB User:    ${DB_USER}"
+echo "  DB Pass:    ${DB_PASS_SAVED}   ← save this!"
 echo ""
-echo "2. Wait for DNS propagation (5-30 minutes)"
+echo "  IMPORTANT: Save the DB password above to a secure location."
 echo ""
-echo "3. Install SSL certificates:"
-echo "   sudo certbot --nginx -d ${APP_DOMAIN} -d ${API_DOMAIN}"
+echo "================================================================"
+echo "  NEXT STEPS"
+echo "================================================================"
 echo ""
-echo "4. Configure SMTP for password reset emails:"
-echo "   nano ${APP_DIR}/.env"
+echo "  1. Point DNS A records to this server IP: ${SERVER_IP}"
+echo "     ${APP_DOMAIN}  →  ${SERVER_IP}"
+echo "     ${API_DOMAIN}  →  ${SERVER_IP}"
 echo ""
-echo "5. Update CORS_ORIGIN in .env if domain changes"
+echo "  2. Wait for DNS propagation (5–30 minutes), then install SSL:"
+echo "     sudo certbot --nginx -d ${APP_DOMAIN} -d ${API_DOMAIN}"
 echo ""
-echo "API: https://${API_DOMAIN}/api/v1/health"
-echo "APP: https://${APP_DOMAIN}"
+echo "  3. Configure email (for password reset):"
+echo "     nano ${APP_DIR}/.env"
 echo ""
-echo "PM2 commands:"
-echo "  pm2 status          — check running processes"
-echo "  pm2 logs            — view API logs"
-echo "  pm2 restart all     — restart after code changes"
+echo "  4. Test the API:"
+echo "     curl http://${API_DOMAIN}/api/v1/health"
+echo ""
+echo "  Useful commands:"
+echo "    pm2 status                  — check running processes"
+echo "    pm2 logs ambrin-api         — live API logs"
+echo "    pm2 restart ambrin-api      — restart after config change"
+echo "    sudo -u postgres psql       — PostgreSQL console"
+echo "    ./deploy/update.sh          — pull & redeploy latest code"
+echo "    ./deploy/backup.sh          — run manual database backup"
 echo ""

@@ -1,201 +1,361 @@
 "use client";
 
-import { useState } from "react";
-import { Mail, MessageCircle, Phone, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, Video, MapPin, Star } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
+import { listCounsellorsApi } from "@/lib/counsellors";
+import { getAvailabilityApi, bookConsultationApi } from "@/lib/consultations";
 
-const CONTACT_EMAIL = "hello@snowflakescounselling.com";
-const CONTACT_WHATSAPP = ""; // Fill in WhatsApp number if available
+type Step = "counsellor" | "slot" | "confirm" | "success";
+type SessionType = "ONLINE" | "IN_PERSON";
 
-const TOPICS = [
-  "General counselling enquiry",
-  "Anxiety & stress management",
-  "Depression support",
-  "Relationship issues",
-  "Work-life balance",
-  "Academic pressure",
-  "Grief & loss",
-  "Other",
-];
+interface Counsellor {
+  id: number;
+  name: string;
+  specialization: string;
+  experience: number;
+  rating: number;
+  bio: string;
+  photo?: string;
+  tags: { id: number; name: string }[];
+}
+
+function getDates(count = 14) {
+  const dates: Date[] = [];
+  const today = new Date();
+  for (let i = 0; i < count; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function fmt(d: Date) {
+  return d.toISOString().split("T")[0];
+}
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function BookPage() {
-  const { user } = useAuthStore();
-  const [selectedTopic, setSelectedTopic] = useState("");
-  const [sent, setSent] = useState(false);
+  const { user, memberships } = useAuthStore();
+  const orgId = memberships[0]?.organization.id ?? 0;
 
-  function buildEmailBody() {
-    const name = user?.name || "";
-    const email = user?.email || "";
-    const topic = selectedTopic || "General enquiry";
-    return encodeURIComponent(
-      `Hi Snowflakes Counselling,\n\nI would like to enquire about counselling support.\n\nName: ${name}\nEmail: ${email}\nTopic: ${topic}\n\nPlease get back to me at your earliest convenience.\n\nThank you.`
-    );
+  const [step, setStep] = useState<Step>("counsellor");
+
+  // Step 1
+  const [counsellors, setCounsellors] = useState<Counsellor[]>([]);
+  const [loadingCounsellors, setLoadingCounsellors] = useState(true);
+  const [selected, setSelected] = useState<Counsellor | null>(null);
+
+  // Step 2
+  const dates = getDates(14);
+  const [dateIdx, setDateIdx] = useState(0);
+  const [sessionType, setSessionType] = useState<SessionType>("ONLINE");
+  const [slots, setSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+
+  // Step 3 / 4
+  const [booking, setBooking] = useState(false);
+  const [bookingError, setBookingError] = useState("");
+  const [bookedDetails, setBookedDetails] = useState<{ date: string; time: string; counsellor: string } | null>(null);
+
+  useEffect(() => {
+    listCounsellorsApi({ limit: 50 })
+      .then((r) => setCounsellors(r.data ?? []))
+      .catch(() => setCounsellors([]))
+      .finally(() => setLoadingCounsellors(false));
+  }, []);
+
+  useEffect(() => {
+    if (!selected) return;
+    setLoadingSlots(true);
+    setSelectedSlot(null);
+    setSlots([]);
+    getAvailabilityApi(selected.id, fmt(dates[dateIdx]))
+      .then((r) => setSlots(r.data?.slots ?? []))
+      .catch(() => setSlots([]))
+      .finally(() => setLoadingSlots(false));
+  }, [selected, dateIdx]);
+
+  async function handleBook() {
+    if (!selected || !selectedSlot) return;
+    setBooking(true);
+    setBookingError("");
+    try {
+      await bookConsultationApi(
+        { counsellorId: selected.id, date: fmt(dates[dateIdx]), time: selectedSlot, type: sessionType },
+        orgId
+      );
+      setBookedDetails({ date: fmt(dates[dateIdx]), time: selectedSlot, counsellor: selected.name });
+      setStep("success");
+    } catch (err: any) {
+      setBookingError(err.response?.data?.error || "Booking failed. Please try again.");
+    } finally {
+      setBooking(false);
+    }
   }
 
-  function handleEmail() {
-    const subject = encodeURIComponent(`Counselling Enquiry — ${selectedTopic || "General"}`);
-    const body = buildEmailBody();
-    window.open(`mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`, "_blank");
-    setSent(true);
+  function reset() {
+    setStep("counsellor");
+    setSelected(null);
+    setDateIdx(0);
+    setSelectedSlot(null);
+    setBookedDetails(null);
+    setBookingError("");
   }
 
-  if (sent) {
+  // ── SUCCESS ────────────────────────────────────────────────────────────────
+  if (step === "success" && bookedDetails) {
     return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center text-center px-4">
-        <div
-          className="mb-6 flex h-20 w-20 items-center justify-center rounded-full"
-          style={{ background: "var(--tag-bg)" }}
-        >
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full" style={{ background: "var(--tag-bg)" }}>
           <CheckCircle2 size={40} style={{ color: "var(--accent-primary)" }} />
         </div>
-        <h1
-          className="font-heading text-[24px] font-semibold"
-          style={{ color: "var(--text-primary)" }}
-        >
-          Request Sent!
-        </h1>
-        <p className="mt-3 max-w-[260px] text-[13px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          Your email client has been opened. Snowflakes Counselling will get back to you soon.
+        <h1 className="font-heading text-[24px] font-semibold" style={{ color: "var(--text-primary)" }}>Session Booked!</h1>
+        <p className="mt-2 text-[13px]" style={{ color: "var(--text-secondary)" }}>with {bookedDetails.counsellor}</p>
+        <div className="glass-card mt-6 w-full p-4 text-left">
+          <Row label="Date" value={bookedDetails.date} />
+          <Row label="Time" value={bookedDetails.time} />
+          <Row label="Type" value={sessionType} />
+        </div>
+        <p className="mt-4 text-[11px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
+          Your counsellor will be in touch to confirm.
         </p>
-        <button
-          onClick={() => setSent(false)}
-          className="mt-8 text-[13px] font-medium"
-          style={{ color: "var(--accent-primary)" }}
-        >
-          Send another enquiry
+        <button onClick={reset} className="mt-6 text-[13px] font-medium" style={{ color: "var(--accent-primary)" }}>
+          Book another session
         </button>
       </div>
     );
   }
 
+  // ── STEP 3: CONFIRM ────────────────────────────────────────────────────────
+  if (step === "confirm" && selected && selectedSlot) {
+    const d = dates[dateIdx];
+    return (
+      <div>
+        <button onClick={() => setStep("slot")} className="mb-4 flex items-center gap-1 text-[12px]" style={{ color: "var(--text-muted)" }}>
+          <ChevronLeft size={14} /> Back
+        </button>
+        <h1 className="font-heading text-[22px] font-semibold" style={{ color: "var(--text-primary)" }}>Confirm Booking</h1>
+        <p className="mt-1 text-[12px]" style={{ color: "var(--text-muted)" }}>Review your session details</p>
+
+        <div className="glass-card mt-6 p-5">
+          <p className="mb-3 text-[11px] font-medium uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Counsellor</p>
+          <CounsellorRow c={selected} />
+        </div>
+
+        <div className="glass-card mt-4 p-5">
+          <p className="mb-3 text-[11px] font-medium uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Session Details</p>
+          <Row label="Date" value={`${DAY_LABELS[d.getDay()]}, ${d.getDate()} ${MONTH_LABELS[d.getMonth()]}`} />
+          <Row label="Time" value={selectedSlot} />
+          <Row label="Type" value={sessionType === "ONLINE" ? "Online (Video Call)" : "In-Person"} />
+        </div>
+
+        {bookingError && (
+          <div className="mt-4 rounded-[12px] p-3 text-[12px]" style={{ background: "rgba(255,107,107,0.1)", color: "#FF6B6B" }}>
+            {bookingError}
+          </div>
+        )}
+
+        <button
+          onClick={handleBook}
+          disabled={booking}
+          className="cta-button mt-6"
+        >
+          {booking ? "Booking…" : "Confirm Session"}
+        </button>
+      </div>
+    );
+  }
+
+  // ── STEP 2: DATE / TIME / TYPE ─────────────────────────────────────────────
+  if (step === "slot" && selected) {
+    const d = dates[dateIdx];
+    return (
+      <div>
+        <button onClick={() => setStep("counsellor")} className="mb-4 flex items-center gap-1 text-[12px]" style={{ color: "var(--text-muted)" }}>
+          <ChevronLeft size={14} /> Back
+        </button>
+        <h1 className="font-heading text-[22px] font-semibold" style={{ color: "var(--text-primary)" }}>Choose a Slot</h1>
+        <p className="mt-1 text-[12px]" style={{ color: "var(--text-muted)" }}>with {selected.name}</p>
+
+        {/* Date picker */}
+        <div className="mt-5">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Date</p>
+          <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+            {dates.map((date, i) => {
+              const isActive = i === dateIdx;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setDateIdx(i)}
+                  className="flex flex-shrink-0 flex-col items-center rounded-[14px] px-3 py-2 text-center"
+                  style={{
+                    background: isActive ? "var(--gradient-cta)" : "var(--bg-card)",
+                    border: `1px solid ${isActive ? "transparent" : "var(--border-card)"}`,
+                    minWidth: 52,
+                  }}
+                >
+                  <span className="text-[10px]" style={{ color: isActive ? "#0B0C10" : "var(--text-muted)" }}>
+                    {DAY_LABELS[date.getDay()]}
+                  </span>
+                  <span className="mt-0.5 text-[16px] font-bold" style={{ color: isActive ? "#0B0C10" : "var(--text-primary)" }}>
+                    {date.getDate()}
+                  </span>
+                  <span className="text-[9px]" style={{ color: isActive ? "#0B0C10" : "var(--text-muted)" }}>
+                    {MONTH_LABELS[date.getMonth()]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Session type */}
+        <div className="mt-5">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Session Type</p>
+          <div className="flex gap-2">
+            {(["ONLINE", "IN_PERSON"] as SessionType[]).map((t) => {
+              const isActive = sessionType === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setSessionType(t)}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-[14px] py-3 text-[12px] font-medium"
+                  style={{
+                    background: isActive ? "rgba(111,255,233,0.12)" : "var(--bg-card)",
+                    border: `1px solid ${isActive ? "rgba(111,255,233,0.25)" : "var(--border-card)"}`,
+                    color: isActive ? "var(--accent-primary)" : "var(--text-secondary)",
+                  }}
+                >
+                  {t === "ONLINE" ? <Video size={14} /> : <MapPin size={14} />}
+                  {t === "ONLINE" ? "Online" : "In-Person"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Time slots */}
+        <div className="mt-5">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+            Available Times — {DAY_LABELS[d.getDay()]}, {d.getDate()} {MONTH_LABELS[d.getMonth()]}
+          </p>
+          {loadingSlots ? (
+            <p className="py-4 text-[12px]" style={{ color: "var(--text-muted)" }}>Loading slots…</p>
+          ) : slots.length === 0 ? (
+            <p className="py-4 text-[12px]" style={{ color: "var(--text-muted)" }}>No slots available on this date. Try another day.</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {slots.map((slot) => {
+                const isActive = selectedSlot === slot;
+                return (
+                  <button
+                    key={slot}
+                    onClick={() => setSelectedSlot(slot)}
+                    className="flex items-center justify-center gap-1 rounded-[12px] py-2.5 text-[12px] font-medium"
+                    style={{
+                      background: isActive ? "rgba(111,255,233,0.12)" : "var(--bg-card)",
+                      border: `1px solid ${isActive ? "rgba(111,255,233,0.25)" : "var(--border-card)"}`,
+                      color: isActive ? "var(--accent-primary)" : "var(--text-secondary)",
+                    }}
+                  >
+                    <Clock size={11} />
+                    {slot}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => setStep("confirm")}
+          disabled={!selectedSlot}
+          className="cta-button mt-6"
+          style={{ opacity: selectedSlot ? 1 : 0.4 }}
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
+
+  // ── STEP 1: SELECT COUNSELLOR ───────────────────────────────────────────────
   return (
     <div>
-      <h1
-        className="font-heading text-[22px] font-semibold leading-tight"
-        style={{ color: "var(--text-primary)" }}
-      >
-        Connect with a{" "}
-        <span
-          style={{
-            background: "var(--gradient-cta)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
-          Counsellor
+      <h1 className="font-heading text-[22px] font-semibold leading-tight" style={{ color: "var(--text-primary)" }}>
+        Book a{" "}
+        <span style={{ background: "var(--gradient-cta)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+          Session
         </span>
       </h1>
-      <p className="mt-1 text-[12px]" style={{ color: "var(--text-muted)" }}>
-        Reach out to Snowflakes Counselling — we'll get back to you within 24 hours
-      </p>
+      <p className="mt-1 text-[12px]" style={{ color: "var(--text-muted)" }}>Choose a counsellor to get started</p>
 
-      {/* Topic selection */}
-      <div className="mt-6">
-        <p
-          className="mb-3 text-[11px] font-medium uppercase tracking-[1.5px]"
-          style={{ color: "var(--text-muted)" }}
-        >
-          What would you like to discuss?
-        </p>
-        <div className="flex flex-col gap-2">
-          {TOPICS.map((topic) => (
-            <button
-              key={topic}
-              onClick={() => setSelectedTopic(topic)}
-              className="flex items-center gap-3 rounded-[16px] p-4 text-left transition-all"
-              style={{
-                background: selectedTopic === topic ? "var(--pill-active-bg)" : "var(--bg-card)",
-                border: `1px solid ${selectedTopic === topic ? "var(--pill-active-border)" : "var(--border-card)"}`,
-              }}
-            >
-              <div
-                className="flex h-[20px] w-[20px] flex-shrink-0 items-center justify-center rounded-full"
-                style={{
-                  background: selectedTopic === topic ? "var(--gradient-cta)" : "transparent",
-                  border: selectedTopic === topic ? "none" : "2px solid var(--border-card)",
-                }}
-              >
-                {selectedTopic === topic && (
-                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4L3.5 6.5L9 1" stroke="var(--cta-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-              <span
-                className="text-[13px]"
-                style={{
-                  color: selectedTopic === topic ? "var(--text-primary)" : "var(--text-secondary)",
-                  fontWeight: selectedTopic === topic ? 600 : 400,
-                }}
-              >
-                {topic}
-              </span>
-            </button>
-          ))}
-        </div>
+      <div className="mt-5 flex flex-col gap-3">
+        {loadingCounsellors && (
+          <p className="py-8 text-center text-[13px]" style={{ color: "var(--text-muted)" }}>Loading counsellors…</p>
+        )}
+        {!loadingCounsellors && counsellors.length === 0 && (
+          <p className="py-8 text-center text-[13px]" style={{ color: "var(--text-muted)" }}>No counsellors available right now.</p>
+        )}
+        {counsellors.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => { setSelected(c); setStep("slot"); }}
+            className="glass-card flex items-start gap-4 p-4 text-left"
+          >
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[16px] text-[18px] font-bold" style={{ background: "var(--tag-bg)", color: "var(--accent-primary)" }}>
+              {c.name.charAt(0)}
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>{c.name}</p>
+              <p className="mt-0.5 text-[11px]" style={{ color: "var(--text-muted)" }}>{c.specialization} · {c.experience} yrs</p>
+              {c.rating > 0 && (
+                <div className="mt-1 flex items-center gap-1">
+                  <Star size={11} style={{ color: "#FFD93D" }} fill="#FFD93D" />
+                  <span className="text-[11px]" style={{ color: "var(--text-secondary)" }}>{c.rating.toFixed(1)}</span>
+                </div>
+              )}
+              {c.tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {c.tags.slice(0, 3).map((tag) => (
+                    <span key={tag.id} className="rounded-pill px-2 py-0.5 text-[9px] font-medium" style={{ background: "var(--tag-bg)", color: "var(--accent-primary)" }}>
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <ChevronRight size={16} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
+          </button>
+        ))}
       </div>
+    </div>
+  );
+}
 
-      {/* Contact options */}
-      <div className="mt-6">
-        <p
-          className="mb-3 text-[11px] font-medium uppercase tracking-[1.5px]"
-          style={{ color: "var(--text-muted)" }}
-        >
-          Contact via
-        </p>
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-2">
+      <span className="text-[12px]" style={{ color: "var(--text-muted)" }}>{label}</span>
+      <span className="text-[13px] font-medium" style={{ color: "var(--text-primary)" }}>{value}</span>
+    </div>
+  );
+}
 
-        {/* Email button */}
-        <button
-          onClick={handleEmail}
-          className="cta-button flex w-full items-center justify-center gap-2"
-        >
-          <Mail size={16} />
-          Send Email Enquiry
-        </button>
-
-        {/* Contact info */}
-        <div className="glass-card mt-4 p-4">
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-icon"
-              style={{ background: "var(--tag-bg)" }}
-            >
-              <Mail size={16} style={{ color: "var(--accent-primary)" }} />
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Email</p>
-              <p className="text-[13px] font-medium" style={{ color: "var(--text-primary)" }}>
-                {CONTACT_EMAIL}
-              </p>
-            </div>
-          </div>
-
-          <div
-            className="my-3 border-t"
-            style={{ borderColor: "var(--border-card)" }}
-          />
-
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-icon"
-              style={{ background: "var(--tag-bg)" }}
-            >
-              <MessageCircle size={16} style={{ color: "var(--accent-primary)" }} />
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Response time</p>
-              <p className="text-[13px] font-medium" style={{ color: "var(--text-primary)" }}>
-                Within 24 hours
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <p className="mt-4 text-center text-[11px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          All conversations are completely confidential.{"\n"}
-          You are safe here.
-        </p>
+function CounsellorRow({ c }: { c: Counsellor }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[12px] text-[16px] font-bold" style={{ background: "var(--tag-bg)", color: "var(--accent-primary)" }}>
+        {c.name.charAt(0)}
+      </div>
+      <div>
+        <p className="text-[14px] font-semibold" style={{ color: "var(--text-primary)" }}>{c.name}</p>
+        <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>{c.specialization}</p>
       </div>
     </div>
   );

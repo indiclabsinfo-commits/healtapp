@@ -190,5 +190,9 @@ export async function getBulkHistory(page: number, limit: number) {
 }
 
 export function getCSVTemplate(): Buffer {
-  return Buffer.from('name,email,phone\n');
+  const header = 'name,email,phone,role,class,section\n';
+  const example1 = 'Arjun Sharma,arjun@school.com,9876543210,STUDENT,10,A\n';
+  const example2 = 'Priya Mehta,priya@school.com,,TEACHER,10,\n';
+  const example3 = 'Dr. Radhika Nair,radhika@school.com,9900112233,COUNSELLOR,,\n';
+  return Buffer.from(header + example1 + example2 + example3);
 }

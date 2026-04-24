@@ -14,3 +14,8 @@ export async function getAssessmentApi(id: number) {
   const response = await api.get(`/assessments/my/${id}`);
   return response.data;
 }
+
+export async function getUserAssessmentsApi(userId: number) {
+  const response = await api.get(`/assessments/user/${userId}`, { params: { limit: 50 } });
+  return response.data;
+}

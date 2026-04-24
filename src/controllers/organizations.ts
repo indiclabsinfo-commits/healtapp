@@ -150,6 +150,54 @@ export async function allocateCredits(req: Request, res: Response, next: NextFun
   }
 }
 
+export async function allocateMemberCredits(req: Request, res: Response, next: NextFunction) {
+  try {
+    const orgId = parseInt(req.params.id);
+    const memberId = parseInt(req.params.memberId);
+    const { amount } = req.body;
+    if (!amount || amount <= 0) return errorResponse(res, 'Amount must be positive', 400, 'INVALID_AMOUNT');
+    const result = await orgService.allocateMemberCredits(orgId, memberId, amount);
+    successResponse(res, result);
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
+    next(error);
+  }
+}
+
+export async function registerOrganization(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await orgService.registerOrganization(req.body);
+    successResponse(res, result, 201);
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
+    next(error);
+  }
+}
+
+export async function bulkAddMembers(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.file) return errorResponse(res, 'CSV file is required', 400, 'MISSING_FILE');
+    const orgId = parseInt(req.params.id);
+    const result = await orgService.bulkAddMembers(orgId, req.file.path, req.user!.userId);
+    successResponse(res, result, 201);
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
+    next(error);
+  }
+}
+
+export async function orgBulkHistory(req: Request, res: Response, next: NextFunction) {
+  try {
+    const orgId = parseInt(req.params.id);
+    const limit = parseInt(req.query.limit as string) || 20;
+    const data = await orgService.getOrgBulkHistory(orgId, limit);
+    successResponse(res, data);
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
+    next(error);
+  }
+}
+
 export async function getMyCredits(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = req.user!.userId;

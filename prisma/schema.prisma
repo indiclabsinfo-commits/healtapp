@@ -34,6 +34,7 @@ enum MemberRole {
   TEACHER
   HR
   ORG_ADMIN
+  COUNSELLOR
 }
 
 enum CounsellorType {
@@ -86,6 +87,7 @@ model Organization {
   consultations Consultation[]
   behaviorLogs  BehaviorLog[]
   assignments   Assignment[]
+  bulkUploads   BulkUpload[]
 }
 
 model OrganizationMember {
@@ -347,13 +349,15 @@ model Assignment {
 }
 
 model BulkUpload {
-  id           Int      @id @default(autoincrement())
-  filename     String
-  totalRows    Int
-  successCount Int
-  errorCount   Int
-  status       String   @default("processing")
-  errors       Json?
-  uploadedBy   Int
-  createdAt    DateTime @default(now())
+  id             Int           @id @default(autoincrement())
+  filename       String
+  totalRows      Int
+  successCount   Int
+  errorCount     Int
+  status         String        @default("processing")
+  errors         Json?
+  uploadedBy     Int
+  organizationId Int?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime      @default(now())
 }

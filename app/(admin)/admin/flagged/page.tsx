@@ -260,7 +260,7 @@ export default function AdminFlaggedPage() {
                       {log.counselingStatus !== "COMPLETED" && (
                         <>
                           <button
-                            onClick={() => router.push(`/admin/schedule?studentId=${log.studentId}`)}
+                            onClick={() => router.push(`/admin/schedule?studentId=${log.student.id}`)}
                             className="flex items-center gap-1.5 rounded-[12px] px-3 py-2 text-[11px] font-medium"
                             style={{
                               background: "rgba(96,165,250,0.1)",

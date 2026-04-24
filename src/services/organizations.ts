@@ -1,4 +1,27 @@
+import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import csv from 'csv-parser';
 import prisma from '../utils/prisma';
+
+function generateOrgCode(name: string): string {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 4)
+    .map((w) => w[0].toUpperCase())
+    .join('');
+  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${initials}${rand}`.slice(0, 10);
+}
+
+async function uniqueCode(name: string): Promise<string> {
+  for (let i = 0; i < 10; i++) {
+    const code = generateOrgCode(name);
+    const exists = await prisma.organization.findUnique({ where: { code } });
+    if (!exists) return code;
+  }
+  return `ORG${Date.now().toString(36).toUpperCase()}`;
+}
 
 export async function validateCode(code: string) {
   const org = await prisma.organization.findUnique({
@@ -221,6 +244,177 @@ export async function allocateCredits(orgId: number, amount: number) {
   });
 
   return updated;
+}
+
+export async function allocateMemberCredits(orgId: number, memberId: number, amount: number) {
+  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { creditBalance: true } });
+  if (!org) throw { status: 404, message: 'Organization not found', code: 'ORG_NOT_FOUND' };
+  if (org.creditBalance < amount) throw { status: 400, message: 'Insufficient organization credits', code: 'INSUFFICIENT_CREDITS' };
+
+  const [member, updatedOrg] = await prisma.$transaction([
+    prisma.organizationMember.update({
+      where: { id: memberId },
+      data: { creditBalance: { increment: amount } },
+      select: { id: true, creditBalance: true, user: { select: { name: true } } },
+    }),
+    prisma.organization.update({
+      where: { id: orgId },
+      data: { creditBalance: { decrement: amount } },
+      select: { id: true, creditBalance: true },
+    }),
+  ]);
+
+  return { member, organization: updatedOrg };
+}
+
+export async function registerOrganization(data: {
+  name: string;
+  type: 'SCHOOL' | 'CORPORATE';
+  contactEmail: string;
+  contactPhone?: string;
+  address?: string;
+  city?: string;
+  principalName: string;
+  principalEmail: string;
+  principalPassword: string;
+}) {
+  const existingUser = await prisma.user.findUnique({ where: { email: data.principalEmail } });
+  if (existingUser) throw { status: 409, message: 'Email already registered', code: 'EMAIL_EXISTS' };
+
+  const code = await uniqueCode(data.name);
+  const hashedPassword = await bcrypt.hash(data.principalPassword, 10);
+
+  const result = await prisma.$transaction(async (tx) => {
+    const org = await tx.organization.create({
+      data: {
+        name: data.name,
+        type: data.type,
+        code,
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone,
+        address: data.city ? `${data.address || ''}, ${data.city}`.trim().replace(/^,\s*/, '') : data.address,
+      },
+    });
+
+    const user = await tx.user.create({
+      data: { name: data.principalName, email: data.principalEmail, password: hashedPassword },
+    });
+
+    await tx.organizationMember.create({
+      data: { userId: user.id, organizationId: org.id, role: 'ORG_ADMIN' },
+    });
+
+    return { org, user };
+  });
+
+  return { orgCode: code, orgId: result.org.id, orgName: result.org.name, email: data.principalEmail };
+}
+
+const VALID_MEMBER_ROLES = ['STUDENT', 'TEACHER', 'COUNSELLOR', 'ORG_ADMIN', 'HR', 'EMPLOYEE'] as const;
+
+export async function bulkAddMembers(orgId: number, filePath: string, uploadedBy: number) {
+  const org = await prisma.organization.findUnique({ where: { id: orgId } });
+  if (!org) throw { status: 404, message: 'Organization not found', code: 'ORG_NOT_FOUND' };
+
+  const rows: Array<{ name: string; email: string; phone?: string; role?: string; class?: string; section?: string }> = [];
+  const errors: Array<{ row: number; email?: string; error: string }> = [];
+
+  await new Promise<void>((resolve, reject) => {
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (row: any) => {
+        rows.push({
+          name: row.name?.trim(),
+          email: row.email?.trim()?.toLowerCase(),
+          phone: row.phone?.trim() || undefined,
+          role: row.role?.trim()?.toUpperCase() || 'STUDENT',
+          class: row.class?.trim() || undefined,
+          section: row.section?.trim() || undefined,
+        });
+      })
+      .on('end', resolve)
+      .on('error', reject);
+  });
+
+  let successCount = 0;
+  const defaultPassword = await bcrypt.hash('Welcome@123', 10);
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowNum = i + 2;
+
+    if (!row.name || !row.email) {
+      errors.push({ row: rowNum, email: row.email, error: 'Name and email are required' });
+      continue;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
+      errors.push({ row: rowNum, email: row.email, error: 'Invalid email format' });
+      continue;
+    }
+    const memberRole = VALID_MEMBER_ROLES.includes(row.role as any) ? row.role : 'STUDENT';
+    const memberClass = row.section ? `${row.class || ''} ${row.section}`.trim() : row.class;
+
+    try {
+      let user = await prisma.user.findUnique({ where: { email: row.email } });
+      if (!user) {
+        user = await prisma.user.create({
+          data: { name: row.name, email: row.email, phone: row.phone, password: defaultPassword },
+        });
+      }
+
+      const existingMember = await prisma.organizationMember.findUnique({
+        where: { userId_organizationId: { userId: user.id, organizationId: orgId } },
+      });
+
+      if (existingMember) {
+        await prisma.organizationMember.update({
+          where: { id: existingMember.id },
+          data: { role: memberRole as any, class: memberClass },
+        });
+      } else {
+        await prisma.organizationMember.create({
+          data: { userId: user.id, organizationId: orgId, role: memberRole as any, class: memberClass },
+        });
+      }
+      successCount++;
+    } catch {
+      errors.push({ row: rowNum, email: row.email, error: 'Failed to add member' });
+    }
+  }
+
+  try { fs.unlinkSync(filePath); } catch {}
+
+  const status = errors.length === 0 ? 'completed' : successCount === 0 ? 'failed' : 'partial';
+
+  const upload = await prisma.bulkUpload.create({
+    data: {
+      filename: filePath.split('/').pop() || 'unknown.csv',
+      totalRows: rows.length,
+      successCount,
+      errorCount: errors.length,
+      status,
+      errors: errors.length > 0 ? errors : undefined,
+      uploadedBy,
+      organizationId: orgId,
+    },
+  });
+
+  return {
+    totalRows: upload.totalRows,
+    successCount: upload.successCount,
+    errorCount: upload.errorCount,
+    status: upload.status,
+    errors: errors.length > 0 ? errors : [],
+  };
+}
+
+export async function getOrgBulkHistory(orgId: number, limit: number) {
+  const data = await prisma.bulkUpload.findMany({
+    where: { organizationId: orgId },
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
+  return data;
 }
 
 export async function getUserCredits(userId: number, orgId?: number) {

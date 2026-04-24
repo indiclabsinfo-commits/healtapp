@@ -305,14 +305,6 @@ export default function AdminStudentsPage() {
                       </p>
                     </div>
 
-                    {/* Mood indicator */}
-                    <div className="flex flex-col items-center gap-1">
-                      <MoodIcon mood={s.lastMood} />
-                      <span className="text-[9px]" style={{ color: "var(--text-muted)" }}>
-                        {moodLabel(s.lastMood)}
-                      </span>
-                    </div>
-
                     {/* Stats */}
                     <div className="hidden items-center gap-4 sm:flex">
                       <div className="text-center">
@@ -326,6 +318,17 @@ export default function AdminStudentsPage() {
                     {/* Actions */}
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={() => router.push(`/admin/clients/${s.member.user.id}`)}
+                        className="rounded-[12px] px-3 py-2 text-[11px] font-medium"
+                        style={{
+                          background: "rgba(167,139,250,0.1)",
+                          color: "#A78BFA",
+                          border: "1px solid rgba(167,139,250,0.15)",
+                        }}
+                      >
+                        Profile
+                      </button>
+                      <button
                         onClick={() => router.push(`/admin/behavior-log?studentId=${s.member.user.id}`)}
                         className="rounded-[12px] px-3 py-2 text-[11px] font-medium"
                         style={{
@@ -334,7 +337,7 @@ export default function AdminStudentsPage() {
                           border: "1px solid rgba(111,255,233,0.15)",
                         }}
                       >
-                        Log Behavior
+                        Log
                       </button>
                       <button
                         onClick={() => toggleExpand(s.member.user.id)}

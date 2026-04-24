@@ -27,7 +27,7 @@ export default function AdminAnalyticsPage() {
   async function handleExport() {
     try {
       const blob = await exportAnalyticsApi();
-      const url = window.URL.createObjectURL(new Blob([blob]));
+      const url = window.URL.createObjectURL(blob instanceof Blob ? blob : new Blob([blob], { type: "text/csv" }));
       const a = document.createElement("a");
       a.href = url;
       a.download = "ambrin-analytics.csv";

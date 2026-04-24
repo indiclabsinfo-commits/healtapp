@@ -10,9 +10,14 @@ import {
   addMemberSchema,
   updateMemberRoleSchema,
   allocateCreditsSchema,
+  registerOrganizationSchema,
 } from '../validators/organizations';
+import { uploadCSV } from '../middleware/upload';
 
 const router = Router();
+
+// Public — self-service school/org registration (no auth required)
+router.post('/register', validate(registerOrganizationSchema), orgController.registerOrganization);
 
 // Public — validate an org code (used during registration)
 router.post('/validate-code', validate(validateOrgCodeSchema), orgController.validateCode);
@@ -47,7 +52,16 @@ router.put('/:id/members/:memberId/role', requireAuth, attachOrgMembership, requ
 // Org Admin — remove member
 router.delete('/:id/members/:memberId', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.removeMember);
 
+// Org Admin — bulk upload members from CSV
+router.post('/:id/members/bulk', requireAuth, attachOrgMembership, requireOrgAdmin, uploadCSV, orgController.bulkAddMembers);
+
+// Org Admin — bulk upload history
+router.get('/:id/bulk/history', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.orgBulkHistory);
+
 // Super Admin — allocate credits to organization
 router.post('/:id/credits', requireAuth, requireAdmin, validate(allocateCreditsSchema), orgController.allocateCredits);
+
+// Org Admin — allocate credits to individual member
+router.patch('/:id/members/:memberId/credits', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.allocateMemberCredits);
 
 export default router;

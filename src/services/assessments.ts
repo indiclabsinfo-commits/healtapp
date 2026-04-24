@@ -65,6 +65,20 @@ export async function submitAssessment(userId: number, data: {
   });
 }
 
+export async function getUserAssessments(userId: number, page: number, limit: number) {
+  const [data, total] = await Promise.all([
+    prisma.assessment.findMany({
+      where: { userId },
+      include: { questionnaire: { select: { title: true, categoryId: true, language: true } } },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { completedAt: 'desc' },
+    }),
+    prisma.assessment.count({ where: { userId } }),
+  ]);
+  return { data, pagination: { page, limit, total } };
+}
+
 export async function getMyAssessments(userId: number, page: number, limit: number) {
   const [data, total] = await Promise.all([
     prisma.assessment.findMany({

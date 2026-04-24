@@ -46,11 +46,17 @@ export default function AdminCreditsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Add credits modal
+  // Org-level add credits modal
   const [showAddCredits, setShowAddCredits] = useState(false);
   const [creditAmount, setCreditAmount] = useState("100");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+
+  // Per-member credit allocation
+  const [memberCreditTarget, setMemberCreditTarget] = useState<OrgMember | null>(null);
+  const [memberCreditAmount, setMemberCreditAmount] = useState("10");
+  const [memberSaving, setMemberSaving] = useState(false);
+  const [memberFormError, setMemberFormError] = useState("");
 
   useEffect(() => {
     if (orgId) {
@@ -96,6 +102,25 @@ export default function AdminCreditsPage() {
       setFormError(err.response?.data?.error || "Failed to allocate credits");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAllocateMemberCredits(e: React.FormEvent) {
+    e.preventDefault();
+    if (!memberCreditTarget) return;
+    setMemberSaving(true);
+    setMemberFormError("");
+    try {
+      const amount = parseInt(memberCreditAmount);
+      if (isNaN(amount) || amount <= 0) { setMemberFormError("Enter valid positive amount"); setMemberSaving(false); return; }
+      await api.patch(`/organizations/${orgId}/members/${memberCreditTarget.id}/credits`, { amount });
+      setMemberCreditTarget(null);
+      setMemberCreditAmount("10");
+      fetchData();
+    } catch (err: any) {
+      setMemberFormError(err.response?.data?.error || "Failed to allocate credits");
+    } finally {
+      setMemberSaving(false);
     }
   }
 
@@ -238,11 +263,21 @@ export default function AdminCreditsPage() {
                     >
                       {member.role}
                     </span>
-                    <div className="text-right">
-                      <p className="text-[14px] font-bold" style={{ color: "var(--accent-primary)" }}>
-                        {member.creditBalance}
-                      </p>
-                      <p className="text-[9px] uppercase tracking-[1px]" style={{ color: "var(--text-muted)" }}>credits</p>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-[14px] font-bold" style={{ color: "var(--accent-primary)" }}>
+                          {member.creditBalance}
+                        </p>
+                        <p className="text-[9px] uppercase tracking-[1px]" style={{ color: "var(--text-muted)" }}>credits</p>
+                      </div>
+                      <button
+                        onClick={() => { setMemberFormError(""); setMemberCreditTarget(member); setMemberCreditAmount("10"); }}
+                        className="flex h-8 w-8 items-center justify-center rounded-[10px] transition-opacity hover:opacity-70"
+                        style={{ background: "rgba(111,255,233,0.1)", color: "var(--accent-primary)", border: "1px solid rgba(111,255,233,0.15)" }}
+                        title="Allocate credits to this member"
+                      >
+                        <Plus size={14} />
+                      </button>
                     </div>
                   </div>
                 );
@@ -258,6 +293,45 @@ export default function AdminCreditsPage() {
           </>
         )}
       </div>
+
+      {/* Per-Member Credit Modal */}
+      {memberCreditTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)" }}>
+          <div className="glass-card mx-4 w-full max-w-md p-6" style={{ borderRadius: "20px" }}>
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="font-heading text-[18px] font-semibold" style={{ color: "var(--text-primary)" }}>
+                Allocate to Member
+              </h2>
+              <button onClick={() => setMemberCreditTarget(null)} style={{ color: "var(--text-muted)" }}><X size={18} /></button>
+            </div>
+            {memberFormError && (
+              <div className="mb-4 rounded-card p-3 text-[12px]" style={{ background: "rgba(255,107,107,0.1)", color: "#FF6B6B" }}>{memberFormError}</div>
+            )}
+            <form onSubmit={handleAllocateMemberCredits} className="space-y-4">
+              <div className="input-field" style={{ opacity: 0.7 }}>{memberCreditTarget.user.name}</div>
+              <div>
+                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Credits to Allocate</label>
+                <input
+                  type="number"
+                  value={memberCreditAmount}
+                  onChange={(e) => setMemberCreditAmount(e.target.value)}
+                  className="input-field"
+                  min={1}
+                  max={orgCredits}
+                  required
+                />
+              </div>
+              <p className="text-[11px]" style={{ color: "var(--text-secondary)" }}>
+                Org balance: <strong>{orgCredits}</strong> → after: <strong>{orgCredits - (parseInt(memberCreditAmount) || 0)}</strong>
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setMemberCreditTarget(null)} className="flex-1 rounded-button border px-4 py-3 text-[13px] font-medium" style={{ borderColor: "var(--accent-primary)", color: "var(--accent-primary)", background: "transparent" }}>Cancel</button>
+                <button type="submit" disabled={memberSaving} className="cta-button flex-1">{memberSaving ? "Allocating..." : "Allocate"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Credits Modal */}
       {showAddCredits && (

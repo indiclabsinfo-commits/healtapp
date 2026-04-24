@@ -40,3 +40,15 @@ export const updateMemberRoleSchema = z.object({
 export const allocateCreditsSchema = z.object({
   amount: z.number().int().positive('Amount must be a positive integer'),
 });
+
+export const registerOrganizationSchema = z.object({
+  name: z.string().min(2, 'School/org name must be at least 2 characters'),
+  type: z.enum(['SCHOOL', 'CORPORATE'], { required_error: 'Type is required' }),
+  contactEmail: z.string().email('Invalid contact email'),
+  contactPhone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  principalName: z.string().min(2, 'Your name is required'),
+  principalEmail: z.string().email('Invalid email address'),
+  principalPassword: z.string().min(8, 'Password must be at least 8 characters'),
+});

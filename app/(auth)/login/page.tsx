@@ -40,6 +40,8 @@ export default function LoginPage() {
           router.push("/admin/dashboard"); // Teacher uses admin layout
         } else if (primaryRole === "HR") {
           router.push("/admin/dashboard");
+        } else if (primaryRole === "COUNSELLOR") {
+          router.push("/admin/dashboard");
         } else {
           router.push("/dashboard");
         }
@@ -178,6 +180,12 @@ export default function LoginPage() {
             </Link>
           </p>
         )}
+        <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
+          Are you a school or organisation?{" "}
+          <Link href="/org-signup" style={{ color: "var(--accent-primary)" }} className="font-medium">
+            Register your institution
+          </Link>
+        </p>
       </div>
     </div>
   );

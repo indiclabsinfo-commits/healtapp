@@ -114,7 +114,7 @@ export default function AdminAssignmentsPage() {
         (res.data.data || []).map((q: any) => ({ id: q.id, title: q.title }))
       );
     } catch {
-      // silently fail
+      setQuestionnaires([]);
     }
   }
 
@@ -125,7 +125,7 @@ export default function AdminAssignmentsPage() {
         (res.data.data || []).map((t: any) => ({ id: t.id, title: t.title }))
       );
     } catch {
-      // silently fail
+      setTheorySessions([]);
     }
   }
 

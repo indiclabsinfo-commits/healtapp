@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import api from "@/lib/api";
 import { getCounsellorConsultationsApi } from "@/lib/consultations";
 import { listCounsellorsApi } from "@/lib/counsellors";
+import { getUserAssessmentsApi } from "@/lib/assessments";
 import {
   ArrowLeft,
   Calendar,
@@ -23,6 +24,7 @@ import {
   Tag,
   ChevronRight,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 
 interface BehaviorLog {
@@ -70,6 +72,39 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 
 function severityScore(s: string) {
   return { LOW: 1, MODERATE: 2, HIGH: 3, CRITICAL: 4 }[s] ?? 1;
+}
+
+function detectAssessmentType(title: string): "PHQ9" | "GAD7" | null {
+  if (title.toLowerCase().includes("phq")) return "PHQ9";
+  if (title.toLowerCase().includes("gad")) return "GAD7";
+  return null;
+}
+
+const ASSESS_LEVELS = {
+  PHQ9: {
+    maxScore: 27,
+    levels: [
+      { label: "Minimal", color: "#4ADE80", min: 0, max: 14 },
+      { label: "Mild", color: "#FFD93D", min: 15, max: 33 },
+      { label: "Moderate", color: "#FF9F40", min: 34, max: 52 },
+      { label: "Moderately Severe", color: "#F97316", min: 53, max: 70 },
+      { label: "Severe", color: "#FF6B6B", min: 71, max: 100 },
+    ],
+  },
+  GAD7: {
+    maxScore: 21,
+    levels: [
+      { label: "Minimal", color: "#4ADE80", min: 0, max: 19 },
+      { label: "Mild", color: "#FFD93D", min: 20, max: 43 },
+      { label: "Moderate", color: "#FF9F40", min: 44, max: 67 },
+      { label: "Severe", color: "#FF6B6B", min: 68, max: 100 },
+    ],
+  },
+};
+
+function getAssessInterp(type: "PHQ9" | "GAD7", pct: number) {
+  const levels = ASSESS_LEVELS[type].levels;
+  return levels.find((l) => pct >= l.min && pct <= l.max) || levels[levels.length - 1];
 }
 
 function computeRisk(logs: BehaviorLog[]): "HIGH" | "MEDIUM" | "LOW" {
@@ -145,6 +180,7 @@ export default function StudentProfilePage() {
 
   const [behaviorLogs, setBehaviorLogs] = useState<BehaviorLog[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [assessments, setAssessments] = useState<any[]>([]);
   const [studentName, setStudentName] = useState<string>("");
   const [studentClass, setStudentClass] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -156,10 +192,12 @@ export default function StudentProfilePage() {
   async function load() {
     setLoading(true);
     try {
-      const [logsRes, membersRes] = await Promise.all([
+      const [logsRes, membersRes, assessRes] = await Promise.all([
         api.get("/behavior-logs", { params: { orgId, studentId: parseInt(id), limit: 100 } }),
         api.get(`/organizations/${orgId}/members`, { params: { role: "STUDENT", limit: 200 } }),
+        getUserAssessmentsApi(parseInt(id)).catch(() => ({ data: [] })),
       ]);
+      setAssessments(assessRes.data || []);
 
       const logs: BehaviorLog[] = logsRes.data.data || [];
       setBehaviorLogs(logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
@@ -403,6 +441,69 @@ export default function StudentProfilePage() {
                             </div>
                             <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
                               {log.notes}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Assessment Results */}
+              <div className="glass-card p-5" style={{ borderRadius: "20px" }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <ClipboardList size={16} style={{ color: "var(--accent-primary)" }} />
+                  <h3 className="font-heading text-[16px] font-semibold" style={{ color: "var(--text-primary)" }}>
+                    Clinical Assessment Results
+                  </h3>
+                </div>
+                {assessments.length === 0 ? (
+                  <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>No assessments completed yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {assessments.map((a) => {
+                      const type = detectAssessmentType(a.questionnaire?.title || "");
+                      if (!type) return null;
+                      const interp = getAssessInterp(type, a.score);
+                      const rawScore = Math.round((a.score / 100) * ASSESS_LEVELS[type].maxScore);
+                      const lang = a.questionnaire?.language?.toUpperCase() || "EN";
+                      return (
+                        <div
+                          key={a.id}
+                          className="flex items-center justify-between rounded-[14px] px-4 py-3"
+                          style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)" }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] text-[10px] font-bold"
+                              style={{ background: `${interp.color}18`, color: interp.color }}
+                            >
+                              {type === "PHQ9" ? "PHQ" : "GAD"}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[12px] font-semibold" style={{ color: "var(--text-primary)" }}>
+                                  {type === "PHQ9" ? "PHQ-9 Depression" : "GAD-7 Anxiety"}
+                                </p>
+                                <span
+                                  className="rounded-full px-1.5 py-0.5 text-[8px] font-medium uppercase"
+                                  style={{ background: "var(--tag-bg)", color: "var(--text-muted)", border: "1px solid var(--tag-border)" }}
+                                >
+                                  {lang}
+                                </span>
+                              </div>
+                              <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                                {new Date(a.completedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[13px] font-bold" style={{ color: interp.color }}>
+                              {interp.label}
+                            </p>
+                            <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                              {rawScore}/{ASSESS_LEVELS[type].maxScore}
                             </p>
                           </div>
                         </div>

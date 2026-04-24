@@ -53,6 +53,7 @@ export default function NoticeChangePage() {
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [quickContext, setQuickContext] = useState<string>("");
+  const [selectedSeverity, setSelectedSeverity] = useState<string>("MODERATE");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -116,7 +117,7 @@ export default function NoticeChangePage() {
         {
           studentId: selectedStudent.user.id,
           category: primaryArea,
-          severity: "MODERATE",
+          severity: selectedSeverity,
           notes: notes || "Noticed a change — flagged for counsellor review.",
           flagForCounseling: true,
         }
@@ -425,6 +426,32 @@ export default function NoticeChangePage() {
                     </span>
                   ) : null;
                 })}
+              </div>
+            </div>
+
+            {/* Severity selector */}
+            <div className="mt-5">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Urgency Level</p>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { key: "LOW", label: "Low", color: "#4ADE80", bg: "rgba(74,222,128,0.12)" },
+                  { key: "MODERATE", label: "Moderate", color: "#FFD93D", bg: "rgba(255,217,61,0.12)" },
+                  { key: "HIGH", label: "High", color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
+                  { key: "CRITICAL", label: "Critical", color: "#FF6B6B", bg: "rgba(255,107,107,0.12)" },
+                ].map((sev) => (
+                  <button
+                    key={sev.key}
+                    onClick={() => setSelectedSeverity(sev.key)}
+                    className="rounded-[12px] py-2 text-[11px] font-semibold transition-all"
+                    style={{
+                      background: selectedSeverity === sev.key ? sev.bg : "var(--bg-card)",
+                      color: selectedSeverity === sev.key ? sev.color : "var(--text-muted)",
+                      border: `1px solid ${selectedSeverity === sev.key ? sev.color + "50" : "var(--border-card)"}`,
+                    }}
+                  >
+                    {sev.label}
+                  </button>
+                ))}
               </div>
             </div>
 

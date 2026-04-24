@@ -11,7 +11,7 @@ const router = Router();
 // All routes require admin
 // Bulk routes MUST come before /:id to prevent "bulk" matching as an ID
 router.get('/bulk/history', requireAuth, requireAdmin, userController.bulkHistory);
-router.get('/bulk/template', requireAuth, requireAdmin, userController.downloadTemplate);
+router.get('/bulk/template', requireAuth, userController.downloadTemplate);
 router.post('/bulk', requireAuth, requireAdmin, uploadCSV, userController.bulkRegister);
 
 // Standard CRUD
