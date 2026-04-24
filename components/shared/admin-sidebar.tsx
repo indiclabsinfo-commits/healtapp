@@ -20,6 +20,8 @@ import {
   FileText,
   AlertTriangle,
   Calendar,
+  Bell,
+  DollarSign,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -35,6 +37,7 @@ const superAdminNav: NavItem[] = [
   { href: "/admin/breathing", label: "Breathing", icon: Wind },
   { href: "/admin/bulk-register", label: "Bulk Register", icon: Upload },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/payouts", label: "Payouts", icon: DollarSign },
 ];
 
 // Org Admin sees org-scoped items
@@ -42,11 +45,13 @@ const orgAdminNav: NavItem[] = [
   { href: "/admin/users", label: "Members", icon: Users },
   { href: "/admin/counsellors", label: "Counsellors", icon: UserCheck },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/payouts", label: "Payouts", icon: DollarSign },
 ];
 
 // Teacher sees student-focused items
 const teacherNav: NavItem[] = [
   { href: "/admin/students", label: "My Students", icon: Users },
+  { href: "/admin/notice-change", label: "Notice a Change", icon: Bell },
   { href: "/admin/behavior-log", label: "Behavior Log", icon: AlertTriangle },
   { href: "/admin/assignments", label: "Assignments", icon: FileText },
   { href: "/admin/analytics", label: "Class Wellness", icon: BarChart3 },

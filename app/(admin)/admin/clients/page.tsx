@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AdminTopbar } from "@/components/shared/admin-topbar";
 import { useAuthStore } from "@/stores/auth-store";
 import api from "@/lib/api";
@@ -17,6 +18,7 @@ import {
   MapPin,
   FileText,
   Users,
+  ChevronRight,
 } from "lucide-react";
 
 interface ConsultationUser {
@@ -67,6 +69,7 @@ const STATUS_CONFIG: Record<string, { bg: string; color: string; border: string;
 };
 
 export default function AdminClientsPage() {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
 
   const [counsellors, setCounsellors] = useState<Counsellor[]>([]);
@@ -301,6 +304,13 @@ export default function AdminClientsPage() {
                               <p className="mt-0.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
                                 {c.user.email}
                               </p>
+                              <button
+                                onClick={() => router.push(`/admin/clients/${c.user.id}`)}
+                                className="mt-1 flex items-center gap-0.5 text-[10px] font-medium"
+                                style={{ color: "var(--accent-primary)" }}
+                              >
+                                View Profile <ChevronRight size={10} />
+                              </button>
                             </div>
 
                             {/* Status tag */}
