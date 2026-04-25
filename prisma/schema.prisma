@@ -83,11 +83,12 @@ model Organization {
   status        Status               @default(ACTIVE)
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
-  members       OrganizationMember[]
-  consultations Consultation[]
-  behaviorLogs  BehaviorLog[]
-  assignments   Assignment[]
-  bulkUploads   BulkUpload[]
+  members                OrganizationMember[]
+  consultations          Consultation[]
+  behaviorLogs           BehaviorLog[]
+  assignments            Assignment[]
+  bulkUploads            BulkUpload[]
+  counsellorAssignments  CounsellorAssignment[]
 }
 
 model OrganizationMember {
@@ -101,6 +102,8 @@ model OrganizationMember {
   department     String?
   creditBalance  Int          @default(0)
   joinedAt       DateTime     @default(now())
+  assignedTo     CounsellorAssignment[] @relation("StudentAssignments")
+  assignedStudents CounsellorAssignment[] @relation("CounsellorAssignments")
 
   @@unique([userId, organizationId])
 }
@@ -123,11 +126,12 @@ model User {
   progress             TheoryProgress[]
   breathingFavourites  BreathingFavourite[]
   breathingHistory     BreathingHistory[]
-  memberships          OrganizationMember[]
-  consultations        Consultation[]
-  behaviorLogsAsStudent BehaviorLog[]  @relation("BehaviorStudent")
-  behaviorLogsAsTeacher BehaviorLog[]  @relation("BehaviorTeacher")
-  assignmentsCreated   Assignment[]
+  memberships                  OrganizationMember[]
+  consultations                Consultation[]
+  behaviorLogsAsStudent        BehaviorLog[]            @relation("BehaviorStudent")
+  behaviorLogsAsTeacher        BehaviorLog[]            @relation("BehaviorTeacher")
+  assignmentsCreated           Assignment[]
+  counsellorAssignmentsMade    CounsellorAssignment[]   @relation("CounsellorAssignmentsMade")
 }
 
 model Counsellor {
@@ -346,6 +350,21 @@ model Assignment {
   mandatory        Boolean      @default(false)
   status           Status       @default(ACTIVE)
   createdAt        DateTime     @default(now())
+}
+
+model CounsellorAssignment {
+  id                 Int                @id @default(autoincrement())
+  studentMemberId    Int
+  studentMember      OrganizationMember @relation("StudentAssignments", fields: [studentMemberId], references: [id], onDelete: Cascade)
+  counsellorMemberId Int
+  counsellorMember   OrganizationMember @relation("CounsellorAssignments", fields: [counsellorMemberId], references: [id], onDelete: Cascade)
+  organizationId     Int
+  organization       Organization       @relation(fields: [organizationId], references: [id])
+  assignedById       Int
+  assignedBy         User               @relation("CounsellorAssignmentsMade", fields: [assignedById], references: [id])
+  assignedAt         DateTime           @default(now())
+
+  @@unique([studentMemberId, counsellorMemberId])
 }
 
 model BulkUpload {

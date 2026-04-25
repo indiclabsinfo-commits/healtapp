@@ -84,13 +84,58 @@ export async function getMembers(req: Request, res: Response, next: NextFunction
   try {
     const orgId = parseInt(req.params.id);
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const { members, total } = await orgService.getOrgMembers(orgId, page, limit);
+    const limit = parseInt(req.query.limit as string) || 200;
+    const filters = {
+      role: req.query.role as string | undefined,
+      class: req.query.class as string | undefined,
+      flagged: req.query.flagged === 'true' ? true : undefined,
+      counsellorMemberId: req.query.counsellorMemberId ? parseInt(req.query.counsellorMemberId as string) : undefined,
+      search: req.query.search as string | undefined,
+    };
+    const { members, total } = await orgService.getOrgMembers(orgId, page, limit, filters);
     paginatedResponse(res, members, { page, limit, total });
   } catch (error: any) {
     if (error.status) {
       return errorResponse(res, error.message, error.status, error.code);
     }
+    next(error);
+  }
+}
+
+export async function assignStudent(req: Request, res: Response, next: NextFunction) {
+  try {
+    const orgId = parseInt(req.params.id);
+    const { studentMemberId, counsellorMemberId } = req.body;
+    if (!studentMemberId || !counsellorMemberId) {
+      return errorResponse(res, 'studentMemberId and counsellorMemberId are required', 400, 'MISSING_FIELDS');
+    }
+    const result = await orgService.assignStudentToCounsellor(orgId, parseInt(studentMemberId), parseInt(counsellorMemberId), req.user!.userId);
+    successResponse(res, result, 201);
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
+    next(error);
+  }
+}
+
+export async function unassignStudent(req: Request, res: Response, next: NextFunction) {
+  try {
+    const orgId = parseInt(req.params.id);
+    const { studentMemberId, counsellorMemberId } = req.body;
+    await orgService.removeStudentAssignment(orgId, parseInt(studentMemberId), parseInt(counsellorMemberId));
+    successResponse(res, { message: 'Assignment removed' });
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
+    next(error);
+  }
+}
+
+export async function listAssignments(req: Request, res: Response, next: NextFunction) {
+  try {
+    const orgId = parseInt(req.params.id);
+    const data = await orgService.getOrgCounsellorAssignments(orgId);
+    successResponse(res, data);
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
     next(error);
   }
 }

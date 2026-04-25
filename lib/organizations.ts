@@ -42,11 +42,6 @@ export async function updateOrganizationApi(id: number, data: any) {
   return response.data;
 }
 
-export async function getOrgMembersApi(orgId: number, params?: { page?: number; limit?: number }) {
-  const response = await api.get(`/organizations/${orgId}/members`, { params });
-  return response.data;
-}
-
 export async function getMyCreditsApi() {
   const response = await api.get("/organizations/credits/my");
   return response.data;
@@ -54,5 +49,30 @@ export async function getMyCreditsApi() {
 
 export async function getOrgBulkHistoryApi(orgId: number, params?: { limit?: number }) {
   const response = await api.get(`/organizations/${orgId}/bulk/history`, { params });
+  return response.data;
+}
+
+export async function getOrgMembersApi(orgId: number, params?: {
+  role?: string; class?: string; flagged?: boolean;
+  counsellorMemberId?: number; search?: string; page?: number; limit?: number;
+}) {
+  const response = await api.get(`/organizations/${orgId}/members`, { params });
+  return response.data;
+}
+
+export async function listAssignmentsApi(orgId: number) {
+  const response = await api.get(`/organizations/${orgId}/assignments`);
+  return response.data;
+}
+
+export async function assignStudentApi(orgId: number, studentMemberId: number, counsellorMemberId: number) {
+  const response = await api.post(`/organizations/${orgId}/assignments`, { studentMemberId, counsellorMemberId });
+  return response.data;
+}
+
+export async function unassignStudentApi(orgId: number, studentMemberId: number, counsellorMemberId: number) {
+  const response = await api.delete(`/organizations/${orgId}/assignments`, {
+    data: { studentMemberId, counsellorMemberId },
+  });
   return response.data;
 }

@@ -132,17 +132,53 @@ export async function deleteOrganization(id: number) {
   return updated;
 }
 
-export async function getOrgMembers(orgId: number, page: number, limit: number) {
+export async function getOrgMembers(orgId: number, page: number, limit: number, filters?: {
+  role?: string;
+  class?: string;
+  flagged?: boolean;
+  counsellorMemberId?: number;
+  search?: string;
+}) {
   const org = await prisma.organization.findUnique({ where: { id: orgId } });
   if (!org) {
     throw { status: 404, message: 'Organization not found', code: 'ORG_NOT_FOUND' };
+  }
+
+  const where: any = { organizationId: orgId };
+
+  if (filters?.role) where.role = filters.role;
+  if (filters?.class) where.class = { contains: filters.class };
+  if (filters?.search) {
+    where.user = {
+      OR: [
+        { name: { contains: filters.search } },
+        { email: { contains: filters.search } },
+      ],
+    };
+  }
+
+  // If filtering by assigned counsellor, restrict via CounsellorAssignment
+  if (filters?.counsellorMemberId !== undefined) {
+    where.assignedTo = {
+      some: { counsellorMemberId: filters.counsellorMemberId },
+    };
+  }
+
+  // If filtering by flagged, restrict to students who have a flagged behavior log
+  if (filters?.flagged) {
+    where.user = {
+      ...(where.user || {}),
+      behaviorLogsAsStudent: {
+        some: { flagForCounseling: true, organizationId: orgId },
+      },
+    };
   }
 
   const skip = (page - 1) * limit;
 
   const [members, total] = await Promise.all([
     prisma.organizationMember.findMany({
-      where: { organizationId: orgId },
+      where,
       skip,
       take: limit,
       orderBy: { joinedAt: 'desc' },
@@ -150,12 +186,67 @@ export async function getOrgMembers(orgId: number, page: number, limit: number) 
         user: {
           select: { id: true, name: true, email: true, phone: true, avatar: true, status: true },
         },
+        assignedTo: {
+          include: {
+            counsellorMember: {
+              include: {
+                user: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
       },
     }),
-    prisma.organizationMember.count({ where: { organizationId: orgId } }),
+    prisma.organizationMember.count({ where }),
   ]);
 
   return { members, total };
+}
+
+// ── Counsellor Assignments ──────────────────────────────────────────────────
+
+export async function assignStudentToCounsellor(
+  orgId: number,
+  studentMemberId: number,
+  counsellorMemberId: number,
+  assignedById: number,
+) {
+  const [student, counsellor] = await Promise.all([
+    prisma.organizationMember.findFirst({ where: { id: studentMemberId, organizationId: orgId } }),
+    prisma.organizationMember.findFirst({ where: { id: counsellorMemberId, organizationId: orgId } }),
+  ]);
+  if (!student) throw { status: 404, message: 'Student not found in org', code: 'NOT_FOUND' };
+  if (!counsellor) throw { status: 404, message: 'Counsellor not found in org', code: 'NOT_FOUND' };
+
+  const assignment = await prisma.counsellorAssignment.upsert({
+    where: { studentMemberId_counsellorMemberId: { studentMemberId, counsellorMemberId } },
+    create: { studentMemberId, counsellorMemberId, organizationId: orgId, assignedById },
+    update: { assignedById, assignedAt: new Date() },
+    include: {
+      studentMember: { include: { user: { select: { id: true, name: true } } } },
+      counsellorMember: { include: { user: { select: { id: true, name: true } } } },
+    },
+  });
+
+  return assignment;
+}
+
+export async function removeStudentAssignment(orgId: number, studentMemberId: number, counsellorMemberId: number) {
+  const assignment = await prisma.counsellorAssignment.findFirst({
+    where: { studentMemberId, counsellorMemberId, organizationId: orgId },
+  });
+  if (!assignment) throw { status: 404, message: 'Assignment not found', code: 'NOT_FOUND' };
+  await prisma.counsellorAssignment.delete({ where: { id: assignment.id } });
+}
+
+export async function getOrgCounsellorAssignments(orgId: number) {
+  return prisma.counsellorAssignment.findMany({
+    where: { organizationId: orgId },
+    include: {
+      studentMember: { include: { user: { select: { id: true, name: true, email: true } } } },
+      counsellorMember: { include: { user: { select: { id: true, name: true } } } },
+    },
+  });
 }
 
 export async function addMember(

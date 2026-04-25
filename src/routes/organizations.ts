@@ -58,6 +58,11 @@ router.post('/:id/members/bulk', requireAuth, attachOrgMembership, requireOrgAdm
 // Org Admin — bulk upload history
 router.get('/:id/bulk/history', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.orgBulkHistory);
 
+// Org Admin — counsellor-student assignments
+router.get('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.listAssignments);
+router.post('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.assignStudent);
+router.delete('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.unassignStudent);
+
 // Super Admin — allocate credits to organization
 router.post('/:id/credits', requireAuth, requireAdmin, validate(allocateCreditsSchema), orgController.allocateCredits);
 
