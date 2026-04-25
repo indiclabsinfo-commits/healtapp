@@ -107,3 +107,20 @@ export async function changePassword(req: Request, res: Response, next: NextFunc
     next(error);
   }
 }
+
+export async function savePushToken(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { token, platform } = req.body;
+    if (!token || typeof token !== 'string') {
+      return errorResponse(res, 'Token required', 400, 'VALIDATION_ERROR');
+    }
+    const prisma = (await import('../utils/prisma')).default;
+    await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { pushToken: token },
+    });
+    successResponse(res, { message: 'Push token saved' });
+  } catch (error: any) {
+    next(error);
+  }
+}

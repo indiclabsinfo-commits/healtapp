@@ -1,4 +1,5 @@
 import prisma from '../utils/prisma';
+import { sendPush } from '../utils/push';
 
 export async function getSlots(counsellorId: number) {
   const counsellor = await prisma.counsellor.findUnique({ where: { id: counsellorId } });
@@ -166,6 +167,21 @@ export async function bookConsultation(userId: number, orgId: number, data: {
     }),
   ]);
 
+  // Notify counsellor's user account of new booking
+  try {
+    const counsellorUser = await prisma.user.findFirst({
+      where: { counsellorProfile: { id: data.counsellorId } },
+      select: { pushToken: true },
+    });
+    const booker = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+    await sendPush(
+      counsellorUser?.pushToken,
+      'New Session Booked',
+      `${booker?.name ?? 'A student'} booked a session on ${data.date} at ${data.time}`,
+      { consultationId: consultation.id, type: 'NEW_BOOKING' },
+    );
+  } catch { /* non-critical */ }
+
   return consultation;
 }
 
@@ -243,14 +259,59 @@ export async function updateStatus(consultationId: number, status: string) {
     }
   }
 
-  return prisma.consultation.update({
+  const updated = await prisma.consultation.update({
     where: { id: consultationId },
     data: { status: status as any },
     include: {
       counsellor: { select: { id: true, name: true, specialization: true, photo: true } },
-      user: { select: { id: true, name: true, email: true, avatar: true } },
+      user: { select: { id: true, name: true, email: true, avatar: true, pushToken: true } },
     },
   });
+
+  // Notify student of status change
+  try {
+    const msgMap: Record<string, string> = {
+      COMPLETED: `Your session with ${updated.counsellor.name} has been marked complete.`,
+      CANCELLED: `Your session with ${updated.counsellor.name} on ${consultation.date.toDateString()} was cancelled. Credit refunded.`,
+      NO_SHOW: `You were marked as no-show for your session with ${updated.counsellor.name}.`,
+    };
+    const msg = msgMap[status];
+    if (msg) {
+      await sendPush((updated.user as any).pushToken, 'Session Update', msg, {
+        consultationId, type: `STATUS_${status}`,
+      });
+    }
+  } catch { /* non-critical */ }
+
+  return updated;
+}
+
+export async function getMyCounsellorProfile(userId: number) {
+  const counsellor = await prisma.counsellor.findUnique({
+    where: { userId },
+    include: { tags: true },
+  });
+  return counsellor;
+}
+
+export async function getMyCounsellorConsultations(userId: number, page: number, limit: number) {
+  const counsellor = await prisma.counsellor.findUnique({ where: { userId } });
+  if (!counsellor) return { data: [], pagination: { page, limit, total: 0 } };
+
+  const where = { counsellorId: counsellor.id };
+  const [data, total] = await Promise.all([
+    prisma.consultation.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, email: true, avatar: true } },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { date: 'desc' },
+    }),
+    prisma.consultation.count({ where }),
+  ]);
+  return { data, pagination: { page, limit, total } };
 }
 
 export async function updateNotes(consultationId: number, notes?: string, summary?: string) {

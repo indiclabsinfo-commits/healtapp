@@ -89,6 +89,25 @@ model Organization {
   assignments            Assignment[]
   bulkUploads            BulkUpload[]
   counsellorAssignments  CounsellorAssignment[]
+  invites                OrgInvite[]
+}
+
+model OrgInvite {
+  id             Int          @id @default(autoincrement())
+  token          String       @unique @default(uuid())
+  email          String
+  role           MemberRole
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedById    Int
+  invitedBy      User         @relation("InvitesSent", fields: [invitedById], references: [id])
+  class          String?
+  department     String?
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([email, organizationId])
 }
 
 model OrganizationMember {
@@ -102,8 +121,9 @@ model OrganizationMember {
   department     String?
   creditBalance  Int          @default(0)
   joinedAt       DateTime     @default(now())
-  assignedTo     CounsellorAssignment[] @relation("StudentAssignments")
+  assignedTo       CounsellorAssignment[] @relation("StudentAssignments")
   assignedStudents CounsellorAssignment[] @relation("CounsellorAssignments")
+  parentConsent    ParentConsent?
 
   @@unique([userId, organizationId])
 }
@@ -119,6 +139,7 @@ model User {
   age         Int?
   role        Role             @default(USER)
   status      Status           @default(ACTIVE)
+  pushToken   String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   assessments          Assessment[]
@@ -132,6 +153,8 @@ model User {
   behaviorLogsAsTeacher        BehaviorLog[]            @relation("BehaviorTeacher")
   assignmentsCreated           Assignment[]
   counsellorAssignmentsMade    CounsellorAssignment[]   @relation("CounsellorAssignmentsMade")
+  counsellorProfile            Counsellor?              @relation("CounsellorProfile")
+  invitesSent                  OrgInvite[]              @relation("InvitesSent")
 }
 
 model Counsellor {
@@ -146,6 +169,8 @@ model Counsellor {
   type           CounsellorType   @default(IN_HOUSE)
   hourlyRate     Float?
   organizationId Int?
+  userId         Int?             @unique
+  user           User?            @relation("CounsellorProfile", fields: [userId], references: [id])
   status         Status           @default(ACTIVE)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -379,4 +404,19 @@ model BulkUpload {
   organizationId Int?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   createdAt      DateTime      @default(now())
+}
+
+model ParentConsent {
+  id               Int                @id @default(autoincrement())
+  studentMemberId  Int                @unique
+  studentMember    OrganizationMember @relation(fields: [studentMemberId], references: [id], onDelete: Cascade)
+  parentName       String
+  parentEmail      String
+  parentPhone      String?
+  consentGiven     Boolean            @default(false)
+  consentDate      DateTime?
+  revokedAt        DateTime?
+  notes            String?            @db.Text
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 }

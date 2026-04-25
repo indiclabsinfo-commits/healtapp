@@ -1,4 +1,5 @@
 import prisma from '../utils/prisma';
+import { sendPushBatch } from '../utils/push';
 
 export async function createAssignment(userId: number, orgId: number, data: {
   type: string;
@@ -26,7 +27,7 @@ export async function createAssignment(userId: number, orgId: number, data: {
     }
   }
 
-  return prisma.assignment.create({
+  const assignment = await prisma.assignment.create({
     data: {
       organizationId: orgId,
       assignedById: userId,
@@ -44,6 +45,35 @@ export async function createAssignment(userId: number, orgId: number, data: {
       assignedBy: { select: { id: true, name: true } },
     },
   });
+
+  // Notify target students
+  try {
+    let targetUsers: { pushToken: string | null }[] = [];
+    if (data.targetType === 'ALL') {
+      targetUsers = await prisma.user.findMany({
+        where: { memberships: { some: { organizationId: orgId } } },
+        select: { pushToken: true },
+      });
+    } else if (data.targetType === 'CLASS' && data.targetValue) {
+      targetUsers = await prisma.user.findMany({
+        where: { memberships: { some: { organizationId: orgId, class: data.targetValue } } },
+        select: { pushToken: true },
+      });
+    } else if (data.targetType === 'DEPARTMENT' && data.targetValue) {
+      targetUsers = await prisma.user.findMany({
+        where: { memberships: { some: { organizationId: orgId, department: data.targetValue } } },
+        select: { pushToken: true },
+      });
+    }
+    await sendPushBatch(
+      targetUsers.map((u) => u.pushToken),
+      'New Assignment',
+      `${data.title} — assigned by ${assignment.assignedBy.name}`,
+      { assignmentId: assignment.id, type: 'NEW_ASSIGNMENT' },
+    );
+  } catch { /* non-critical */ }
+
+  return assignment;
 }
 
 export async function listAssignments(orgId: number, page: number, limit: number) {
