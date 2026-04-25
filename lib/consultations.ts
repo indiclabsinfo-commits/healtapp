@@ -52,3 +52,8 @@ export async function updateConsultationNotesApi(id: number, data: { notes?: str
   const response = await api.put(`/consultations/${id}/notes`, data);
   return response.data;
 }
+
+export async function getOrgConsultationsApi(orgId: number, params?: { page?: number; limit?: number }) {
+  const response = await api.get("/consultations", { params: { orgId, ...params } });
+  return response.data;
+}
