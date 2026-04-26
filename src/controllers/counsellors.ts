@@ -56,24 +56,12 @@ export async function getCounsellorById(req: Request, res: Response, next: NextF
 export async function createCounsellor(req: Request, res: Response, next: NextFunction) {
   try {
     const data = { ...req.body };
-
-    // Parse tags from JSON string (multipart/form-data sends strings)
-    if (typeof data.tags === 'string') {
-      try { data.tags = JSON.parse(data.tags); } catch { data.tags = []; }
-    }
-
-    // Parse numeric fields from string
-    if (typeof data.experience === 'string') data.experience = parseInt(data.experience);
-    if (typeof data.rating === 'string') data.rating = parseFloat(data.rating);
-    if (typeof data.hourlyRate === 'string') data.hourlyRate = parseFloat(data.hourlyRate);
-
     const email = data.email;
-    delete data.email; // not a Counsellor field — handled via linkUserAccount
+    delete data.email; // handled via linkUserAccount, not stored on Counsellor
 
     const photoPath = req.file ? await resolvePhotoPath(req.file) : undefined;
     const counsellor = await counsellorService.createCounsellor(data, photoPath);
 
-    // Auto-link user account if email provided
     if (email) {
       try { await counsellorService.linkUserAccount(counsellor.id, email); } catch { /* ignore */ }
     }
@@ -93,18 +81,7 @@ export async function updateCounsellor(req: Request, res: Response, next: NextFu
     if (isNaN(id)) {
       return errorResponse(res, 'Invalid counsellor ID', 400, 'INVALID_ID');
     }
-
     const data = { ...req.body };
-
-    // Parse tags from JSON string
-    if (typeof data.tags === 'string') {
-      try { data.tags = JSON.parse(data.tags); } catch { data.tags = []; }
-    }
-
-    // Parse numeric fields
-    if (typeof data.experience === 'string') data.experience = parseInt(data.experience);
-    if (typeof data.rating === 'string') data.rating = parseFloat(data.rating);
-    if (typeof data.hourlyRate === 'string') data.hourlyRate = parseFloat(data.hourlyRate);
     delete data.email;
 
     const photoPath = req.file ? await resolvePhotoPath(req.file) : undefined;

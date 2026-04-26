@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const MEMBER_ROLES = ['STUDENT', 'EMPLOYEE', 'TEACHER', 'HR', 'ORG_ADMIN', 'COUNSELLOR'] as const;
+
 export const validateOrgCodeSchema = z.object({
   code: z.string().min(1, 'Organization code is required'),
 });
@@ -11,6 +13,7 @@ export const createOrganizationSchema = z.object({
   contactEmail: z.string().email('Invalid email address').optional(),
   contactPhone: z.string().optional(),
   address: z.string().optional(),
+  logo: z.string().optional(),
 });
 
 export const updateOrganizationSchema = z.object({
@@ -20,21 +23,20 @@ export const updateOrganizationSchema = z.object({
   contactEmail: z.string().email('Invalid email address').optional(),
   contactPhone: z.string().optional(),
   address: z.string().optional(),
+  logo: z.string().optional(),
+  creditBalance: z.number().int().nonnegative().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });
 
 export const addMemberSchema = z.object({
   userId: z.number().int().positive('User ID is required'),
-  role: z.enum(['STUDENT', 'EMPLOYEE', 'TEACHER', 'HR', 'ORG_ADMIN'], {
-    required_error: 'Role is required',
-  }),
+  role: z.enum(MEMBER_ROLES, { required_error: 'Role is required' }),
   class: z.string().optional(),
   department: z.string().optional(),
 });
 
 export const updateMemberRoleSchema = z.object({
-  role: z.enum(['STUDENT', 'EMPLOYEE', 'TEACHER', 'HR', 'ORG_ADMIN'], {
-    required_error: 'Role is required',
-  }),
+  role: z.enum(MEMBER_ROLES, { required_error: 'Role is required' }),
 });
 
 export const allocateCreditsSchema = z.object({

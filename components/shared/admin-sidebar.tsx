@@ -24,29 +24,42 @@ import {
   DollarSign,
   ShieldCheck,
   Settings,
+  GraduationCap,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 
 type NavItem = { href: string; label: string; icon: any };
 
-// Super Admin sees everything
+// Super Admin sees everything across the platform
 const superAdminNav: NavItem[] = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/counsellors", label: "Counsellors", icon: UserCheck },
   { href: "/admin/organizations", label: "Organizations", icon: Building2 },
+  { href: "/admin/students", label: "Students", icon: GraduationCap },
+  { href: "/admin/clients", label: "Clients", icon: Users },
+  { href: "/admin/assignments", label: "Assignments", icon: FileText },
+  { href: "/admin/schedule", label: "Schedules", icon: Calendar },
+  { href: "/admin/consent", label: "Parent Consent", icon: ShieldCheck },
+  { href: "/admin/behavior-log", label: "Behavior Log", icon: AlertTriangle },
+  { href: "/admin/flagged", label: "Flagged", icon: AlertTriangle },
+  { href: "/admin/notice-change", label: "Notice a Change", icon: Bell },
+  { href: "/admin/principal", label: "Principal", icon: BarChart3 },
   { href: "/admin/questionnaire", label: "Questionnaire", icon: ClipboardList },
   { href: "/admin/theory", label: "Theory", icon: BookOpen },
   { href: "/admin/breathing", label: "Breathing", icon: Wind },
   { href: "/admin/bulk-register", label: "Bulk Register", icon: Upload },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/onboarding", label: "Onboarding", icon: GraduationCap },
+  { href: "/admin/credits", label: "Credits", icon: CreditCard },
   { href: "/admin/payouts", label: "Payouts", icon: DollarSign },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/org-settings", label: "Org Settings", icon: Settings },
 ];
 
 // Org Admin sees org-scoped items
 const orgAdminNav: NavItem[] = [
   { href: "/admin/users", label: "Members", icon: Users },
   { href: "/admin/counsellors", label: "Counsellors", icon: UserCheck },
-  { href: "/admin/students", label: "Students", icon: Users },
+  { href: "/admin/students", label: "Students", icon: GraduationCap },
   { href: "/admin/assignments", label: "Assignments", icon: FileText },
   { href: "/admin/behavior-log", label: "Behavior Log", icon: AlertTriangle },
   { href: "/admin/principal", label: "Analytics", icon: BarChart3 },
@@ -73,22 +86,24 @@ const hrNav: NavItem[] = [
   { href: "/admin/analytics", label: "Wellness Reports", icon: BarChart3 },
 ];
 
-// Counsellor sees schedule-focused items
+// Counsellor sees schedule + clients
 const counsellorNav: NavItem[] = [
   { href: "/admin/counsellor-dashboard", label: "My Dashboard", icon: LayoutDashboard },
   { href: "/admin/schedule", label: "My Schedule", icon: Calendar },
   { href: "/admin/clients", label: "My Clients", icon: Users },
   { href: "/admin/flagged", label: "Flagged Students", icon: AlertTriangle },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 function getNavForRole(isAdmin: boolean, memberRole: string | null): { nav: NavItem[]; roleLabel: string } {
   if (isAdmin) return { nav: superAdminNav, roleLabel: "Super Admin" };
 
   switch (memberRole) {
-    case "ORG_ADMIN": return { nav: orgAdminNav, roleLabel: "Organization Admin" };
-    case "TEACHER": return { nav: teacherNav, roleLabel: "Teacher" };
-    case "HR": return { nav: hrNav, roleLabel: "HR Manager" };
-    default: return { nav: counsellorNav, roleLabel: "Counsellor" };
+    case "ORG_ADMIN":  return { nav: orgAdminNav,    roleLabel: "Organization Admin" };
+    case "TEACHER":    return { nav: teacherNav,     roleLabel: "Teacher" };
+    case "HR":         return { nav: hrNav,          roleLabel: "HR Manager" };
+    case "COUNSELLOR": return { nav: counsellorNav,  roleLabel: "Counsellor" };
+    default:           return { nav: [],             roleLabel: "Member" };
   }
 }
 

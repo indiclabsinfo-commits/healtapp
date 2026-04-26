@@ -85,7 +85,7 @@ export default function AdminCounsellorsPage() {
 
   function openAddForm() {
     setEditingCounsellor(null);
-    setFormData({ name: "", specialization: "", qualifications: "", experience: "", bio: "", tags: "" });
+    setFormData({ name: "", specialization: "", qualifications: "", experience: "", bio: "", tags: "", email: "", hourlyRate: "" });
     setPhotoFile(null);
     setFormError("");
     setShowForm(true);
