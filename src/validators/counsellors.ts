@@ -8,6 +8,7 @@ export const createCounsellorSchema = z.object({
   bio: z.string().min(10, 'Bio must be at least 10 characters'),
   tags: z.array(z.string()).optional(),
   rating: z.number().min(0).max(5).optional(),
+  hourlyRate: z.number().positive().optional(),
 });
 
 export const updateCounsellorSchema = z.object({
@@ -18,4 +19,5 @@ export const updateCounsellorSchema = z.object({
   bio: z.string().min(10).optional(),
   tags: z.array(z.string()).optional(),
   rating: z.number().min(0).max(5).optional(),
+  hourlyRate: z.number().positive().optional(),
 });

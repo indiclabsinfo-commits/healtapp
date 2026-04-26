@@ -23,6 +23,7 @@ import orgRoutes from './routes/organizations';
 import behaviorLogRoutes from './routes/behaviorLogs';
 import consultationRoutes from './routes/consultations';
 import assignmentRoutes from './routes/assignments';
+import inviteRoutes from './routes/invites';
 import { errorHandler } from './middleware/error';
 
 const app = express();
@@ -57,7 +58,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isDev ? 1000 : 200, // Relaxed in dev
+  max: isDev ? 5000 : 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Too many requests, please try again later.', code: 'RATE_LIMITED' },
@@ -65,7 +66,7 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isDev ? 100 : 20, // Relaxed in dev
+  max: isDev ? 200 : 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Too many login attempts, please try again later.', code: 'RATE_LIMITED' },
@@ -99,6 +100,7 @@ app.use('/api/v1/organizations', orgRoutes);
 app.use('/api/v1/behavior-logs', behaviorLogRoutes);
 app.use('/api/v1/consultations', consultationRoutes);
 app.use('/api/v1/assignments', assignmentRoutes);
+app.use('/api/v1/invites', inviteRoutes);
 
 // Error handler
 app.use(errorHandler);

@@ -10,6 +10,8 @@ import {
   createQuestionnaireApi,
   updateQuestionnaireApi,
   deleteQuestionnaireApi,
+  createCategoryApi,
+  createQuestionApi,
 } from "@/lib/questionnaires";
 import {
   ChevronRight,
@@ -24,6 +26,7 @@ import {
   Pencil,
   ToggleLeft,
   ToggleRight,
+  Plus,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -96,7 +99,7 @@ export default function AdminQuestionnairePage() {
   // Build form
   const [buildTitle, setBuildTitle] = useState("");
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<number>>(new Set());
-  const [buildPublished, setBuildPublished] = useState(false);
+  const [buildPublished, setBuildPublished] = useState(true);
 
   // Edit mode
   const [editingQuestionnaire, setEditingQuestionnaire] = useState<Questionnaire | null>(null);
@@ -106,6 +109,21 @@ export default function AdminQuestionnairePage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Add Category form (Step 1)
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [catFormName, setCatFormName] = useState("");
+  const [catFormDesc, setCatFormDesc] = useState("");
+  const [catSaving, setCatSaving] = useState(false);
+
+  // Add Question form (Step 3)
+  const [showAddQuestion, setShowAddQuestion] = useState(false);
+  const [qFormText, setQFormText] = useState("");
+  const [qFormType, setQFormType] = useState<"MCQ" | "SCALE" | "YESNO">("MCQ");
+  const [qFormOptions, setQFormOptions] = useState(["", "", "", ""]);
+  const [qFormScaleMin, setQFormScaleMin] = useState("1");
+  const [qFormScaleMax, setQFormScaleMax] = useState("10");
+  const [qSaving, setQSaving] = useState(false);
 
   /* ---------------------------------------------------------------- */
   /*  Data fetching                                                    */
@@ -326,6 +344,67 @@ export default function AdminQuestionnairePage() {
   }
 
   /* ---------------------------------------------------------------- */
+  /*  Add Category                                                     */
+  /* ---------------------------------------------------------------- */
+
+  async function handleAddCategory(e: React.FormEvent) {
+    e.preventDefault();
+    if (!catFormName.trim()) return;
+    setCatSaving(true);
+    setError("");
+    try {
+      await createCategoryApi({ name: catFormName.trim(), description: catFormDesc.trim() || undefined });
+      setCatFormName("");
+      setCatFormDesc("");
+      setShowAddCategory(false);
+      fetchCategories();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to create category");
+    } finally {
+      setCatSaving(false);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Add Question                                                     */
+  /* ---------------------------------------------------------------- */
+
+  async function handleAddQuestion(e: React.FormEvent) {
+    e.preventDefault();
+    if (!qFormText.trim() || !selectedLevel) return;
+    setCatSaving(false);
+    setQSaving(true);
+    setError("");
+    try {
+      let options: any;
+      if (qFormType === "MCQ") {
+        options = qFormOptions.filter((o) => o.trim()).map((o) => o.trim());
+        if (options.length < 2) {
+          setError("MCQ questions need at least 2 options");
+          setQSaving(false);
+          return;
+        }
+      } else if (qFormType === "SCALE") {
+        options = { min: parseInt(qFormScaleMin) || 1, max: parseInt(qFormScaleMax) || 10 };
+      } else {
+        options = ["Yes", "No"];
+      }
+      await createQuestionApi({ text: qFormText.trim(), type: qFormType, options, levelId: selectedLevel.id });
+      setQFormText("");
+      setQFormType("MCQ");
+      setQFormOptions(["", "", "", ""]);
+      setQFormScaleMin("1");
+      setQFormScaleMax("10");
+      setShowAddQuestion(false);
+      fetchQuestions(selectedLevel.id);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to create question");
+    } finally {
+      setQSaving(false);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
   /*  Helpers                                                          */
   /* ---------------------------------------------------------------- */
 
@@ -445,19 +524,80 @@ export default function AdminQuestionnairePage() {
         {/* ================================================================ */}
         {!loading && step === 1 && (
           <div>
-            <h2
-              className="font-heading mb-4 text-[18px] font-semibold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Select a Category
-            </h2>
-            <p className="mb-6 text-[12px]" style={{ color: "var(--text-muted)" }}>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2
+                className="font-heading text-[18px] font-semibold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Select a Category
+              </h2>
+              <button
+                onClick={() => { setCatFormName(""); setCatFormDesc(""); setShowAddCategory((v) => !v); }}
+                className="flex items-center gap-1.5 rounded-button px-4 py-2 text-[12px] font-medium transition-all"
+                style={{ background: "rgba(111,255,233,0.1)", color: "var(--accent-primary)", border: "1px solid rgba(111,255,233,0.2)" }}
+              >
+                <Plus size={14} />
+                Add Category
+              </button>
+            </div>
+            <p className="mb-4 text-[12px]" style={{ color: "var(--text-muted)" }}>
               Choose a category to browse its levels and questions.
             </p>
 
+            {/* Inline Add Category form */}
+            {showAddCategory && (
+              <form
+                onSubmit={handleAddCategory}
+                className="glass-card mb-6 p-5 space-y-4"
+                style={{ borderRadius: "20px", border: "1px solid rgba(111,255,233,0.2)" }}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)" }}>New Category</p>
+                  <button type="button" onClick={() => setShowAddCategory(false)} style={{ color: "var(--text-muted)" }}>
+                    <X size={16} />
+                  </button>
+                </div>
+                <div>
+                  <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Name *</label>
+                  <input
+                    type="text"
+                    value={catFormName}
+                    onChange={(e) => setCatFormName(e.target.value)}
+                    className="input-field"
+                    placeholder="e.g. Anxiety"
+                    required
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Description</label>
+                  <input
+                    type="text"
+                    value={catFormDesc}
+                    onChange={(e) => setCatFormDesc(e.target.value)}
+                    className="input-field"
+                    placeholder="Optional description"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCategory(false)}
+                    className="flex-1 rounded-button border px-4 py-2.5 text-[12px] font-medium"
+                    style={{ borderColor: "var(--accent-primary)", color: "var(--accent-primary)", background: "transparent" }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={catSaving} className="cta-button flex-1" style={{ padding: "10px" }}>
+                    {catSaving ? "Creating..." : "Create Category"}
+                  </button>
+                </div>
+              </form>
+            )}
+
             {categories.length === 0 && (
               <div className="py-12 text-center text-[13px]" style={{ color: "var(--text-muted)" }}>
-                No categories found. Create categories first.
+                No categories found. Use the Add Category button above to create one.
               </div>
             )}
 
@@ -587,22 +727,152 @@ export default function AdminQuestionnairePage() {
               <ChevronLeft size={14} /> Back to Levels
             </button>
 
-            <div className="mb-1 flex items-center gap-2">
-              <h2
-                className="font-heading text-[18px] font-semibold"
-                style={{ color: "var(--text-primary)" }}
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h2
+                  className="font-heading text-[18px] font-semibold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {selectedLevel.name}
+                </h2>
+                <span className="tag">{selectedCategory.name}</span>
+              </div>
+              <button
+                onClick={() => { setQFormText(""); setQFormType("MCQ"); setQFormOptions(["", "", "", ""]); setShowAddQuestion((v) => !v); }}
+                className="flex items-center gap-1.5 rounded-button px-4 py-2 text-[12px] font-medium transition-all"
+                style={{ background: "rgba(111,255,233,0.1)", color: "var(--accent-primary)", border: "1px solid rgba(111,255,233,0.2)" }}
               >
-                {selectedLevel.name}
-              </h2>
-              <span className="tag">{selectedCategory.name}</span>
+                <Plus size={14} />
+                Add Question
+              </button>
             </div>
-            <p className="mb-6 text-[12px]" style={{ color: "var(--text-muted)" }}>
+            <p className="mb-4 text-[12px]" style={{ color: "var(--text-muted)" }}>
               {questions.length} question{questions.length !== 1 ? "s" : ""} in this level.
             </p>
 
-            {questions.length === 0 && (
+            {/* Inline Add Question form */}
+            {showAddQuestion && (
+              <form
+                onSubmit={handleAddQuestion}
+                className="glass-card mb-6 p-5 space-y-4"
+                style={{ borderRadius: "20px", border: "1px solid rgba(111,255,233,0.2)" }}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)" }}>New Question</p>
+                  <button type="button" onClick={() => setShowAddQuestion(false)} style={{ color: "var(--text-muted)" }}>
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Question Text *</label>
+                  <input
+                    type="text"
+                    value={qFormText}
+                    onChange={(e) => setQFormText(e.target.value)}
+                    className="input-field"
+                    placeholder="Enter the question..."
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Type</label>
+                  <div className="flex gap-2">
+                    {(["MCQ", "SCALE", "YESNO"] as const).map((t) => {
+                      const typeStyle = getQuestionTypeColor(t);
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setQFormType(t)}
+                          className="rounded-pill px-3 py-1.5 text-[11px] font-medium transition-all"
+                          style={{
+                            background: qFormType === t ? typeStyle.bg : "var(--input-bg)",
+                            color: qFormType === t ? typeStyle.color : "var(--text-muted)",
+                            border: `1px solid ${qFormType === t ? typeStyle.border : "var(--input-border)"}`,
+                          }}
+                        >
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {qFormType === "MCQ" && (
+                  <div>
+                    <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Options (min 2)</label>
+                    <div className="space-y-2">
+                      {qFormOptions.map((opt, idx) => (
+                        <input
+                          key={idx}
+                          type="text"
+                          value={opt}
+                          onChange={(e) => {
+                            const next = [...qFormOptions];
+                            next[idx] = e.target.value;
+                            setQFormOptions(next);
+                          }}
+                          className="input-field"
+                          placeholder={`Option ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {qFormType === "SCALE" && (
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Min</label>
+                      <input
+                        type="number"
+                        value={qFormScaleMin}
+                        onChange={(e) => setQFormScaleMin(e.target.value)}
+                        className="input-field"
+                        min={0}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Max</label>
+                      <input
+                        type="number"
+                        value={qFormScaleMax}
+                        onChange={(e) => setQFormScaleMax(e.target.value)}
+                        className="input-field"
+                        min={1}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {qFormType === "YESNO" && (
+                  <p className="rounded-[12px] px-3 py-2 text-[11px]" style={{ background: "var(--input-bg)", color: "var(--text-muted)" }}>
+                    Options: Yes / No (auto-configured)
+                  </p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddQuestion(false)}
+                    className="flex-1 rounded-button border px-4 py-2.5 text-[12px] font-medium"
+                    style={{ borderColor: "var(--accent-primary)", color: "var(--accent-primary)", background: "transparent" }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={qSaving} className="cta-button flex-1" style={{ padding: "10px" }}>
+                    {qSaving ? "Creating..." : "Create Question"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {questions.length === 0 && !showAddQuestion && (
               <div className="py-12 text-center text-[13px]" style={{ color: "var(--text-muted)" }}>
-                No questions found in this level.
+                No questions found in this level. Use the Add Question button above to create one.
               </div>
             )}
 

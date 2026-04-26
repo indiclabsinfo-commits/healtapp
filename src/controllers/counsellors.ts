@@ -65,9 +65,19 @@ export async function createCounsellor(req: Request, res: Response, next: NextFu
     // Parse numeric fields from string
     if (typeof data.experience === 'string') data.experience = parseInt(data.experience);
     if (typeof data.rating === 'string') data.rating = parseFloat(data.rating);
+    if (typeof data.hourlyRate === 'string') data.hourlyRate = parseFloat(data.hourlyRate);
+
+    const email = data.email;
+    delete data.email; // not a Counsellor field — handled via linkUserAccount
 
     const photoPath = req.file ? await resolvePhotoPath(req.file) : undefined;
     const counsellor = await counsellorService.createCounsellor(data, photoPath);
+
+    // Auto-link user account if email provided
+    if (email) {
+      try { await counsellorService.linkUserAccount(counsellor.id, email); } catch { /* ignore */ }
+    }
+
     successResponse(res, counsellor, 201);
   } catch (error: any) {
     if (error.status) {
@@ -94,6 +104,8 @@ export async function updateCounsellor(req: Request, res: Response, next: NextFu
     // Parse numeric fields
     if (typeof data.experience === 'string') data.experience = parseInt(data.experience);
     if (typeof data.rating === 'string') data.rating = parseFloat(data.rating);
+    if (typeof data.hourlyRate === 'string') data.hourlyRate = parseFloat(data.hourlyRate);
+    delete data.email;
 
     const photoPath = req.file ? await resolvePhotoPath(req.file) : undefined;
     const counsellor = await counsellorService.updateCounsellor(id, data, photoPath);
@@ -119,6 +131,19 @@ export async function deleteCounsellor(req: Request, res: Response, next: NextFu
     if (error.status) {
       return errorResponse(res, error.message, error.status, error.code);
     }
+    next(error);
+  }
+}
+
+export async function linkUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = parseInt(req.params.id);
+    const { email } = req.body;
+    if (!email) return errorResponse(res, 'email required', 400, 'VALIDATION_ERROR');
+    const result = await counsellorService.linkUserAccount(id, email);
+    successResponse(res, result);
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
     next(error);
   }
 }

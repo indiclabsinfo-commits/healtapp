@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import * as orgController from '../controllers/organizations';
+import * as inviteController from '../controllers/invites';
+import * as consentController from '../controllers/consent';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { attachOrgMembership, requireOrgAdmin } from '../middleware/org';
 import { validate } from '../middleware/validate';
@@ -34,8 +36,8 @@ router.post('/', requireAuth, requireAdmin, validate(createOrganizationSchema), 
 // Super Admin or Org Admin — get organization detail
 router.get('/:id', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.getOrganization);
 
-// Super Admin — update organization
-router.put('/:id', requireAuth, requireAdmin, validate(updateOrganizationSchema), orgController.updateOrganization);
+// Super Admin or Org Admin — update organization
+router.put('/:id', requireAuth, attachOrgMembership, requireOrgAdmin, validate(updateOrganizationSchema), orgController.updateOrganization);
 
 // Super Admin — soft delete organization
 router.delete('/:id', requireAuth, requireAdmin, orgController.deleteOrganization);
@@ -55,13 +57,36 @@ router.delete('/:id/members/:memberId', requireAuth, attachOrgMembership, requir
 // Org Admin — bulk upload members from CSV
 router.post('/:id/members/bulk', requireAuth, attachOrgMembership, requireOrgAdmin, uploadCSV, orgController.bulkAddMembers);
 
+// Org Admin — email invites
+router.post('/:id/members/invite', requireAuth, attachOrgMembership, requireOrgAdmin, inviteController.sendInvite);
+router.get('/:id/invites', requireAuth, attachOrgMembership, requireOrgAdmin, inviteController.listInvites);
+
+// Org Admin — org analytics (principal dashboard)
+router.get('/:id/analytics', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.orgAnalytics);
+
+// Org Admin — org consultations listing
+router.get('/:id/consultations', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.orgConsultations);
+
 // Org Admin — bulk upload history
 router.get('/:id/bulk/history', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.orgBulkHistory);
+
+// Counsellor — get own assigned students
+router.get('/:id/assignments/mine', requireAuth, orgController.getMyCounsellorAssignments);
+
+// Student — get counsellors assigned to me
+router.get('/:id/my-counsellors', requireAuth, orgController.getMyAssignedCounsellors);
 
 // Org Admin — counsellor-student assignments
 router.get('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.listAssignments);
 router.post('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.assignStudent);
 router.delete('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.unassignStudent);
+
+// Org Admin — bulk assign entire class to counsellor
+router.post('/:id/assignments/bulk-class', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.bulkAssignClass);
+
+// Org Admin — parent consent management
+router.get('/:id/consents', requireAuth, attachOrgMembership, requireOrgAdmin, consentController.listConsents);
+router.put('/:id/consents/:memberId', requireAuth, attachOrgMembership, requireOrgAdmin, consentController.saveConsent);
 
 // Super Admin — allocate credits to organization
 router.post('/:id/credits', requireAuth, requireAdmin, validate(allocateCreditsSchema), orgController.allocateCredits);

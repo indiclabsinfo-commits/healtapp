@@ -22,6 +22,8 @@ import {
   Calendar,
   Bell,
   DollarSign,
+  ShieldCheck,
+  Settings,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -44,8 +46,16 @@ const superAdminNav: NavItem[] = [
 const orgAdminNav: NavItem[] = [
   { href: "/admin/users", label: "Members", icon: Users },
   { href: "/admin/counsellors", label: "Counsellors", icon: UserCheck },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/students", label: "Students", icon: Users },
+  { href: "/admin/assignments", label: "Assignments", icon: FileText },
+  { href: "/admin/behavior-log", label: "Behavior Log", icon: AlertTriangle },
+  { href: "/admin/principal", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/bulk-register", label: "Bulk Register", icon: Upload },
+  { href: "/admin/consent", label: "Parent Consent", icon: ShieldCheck },
+  { href: "/admin/schedule", label: "Schedules", icon: Calendar },
+  { href: "/admin/credits", label: "Credits", icon: CreditCard },
   { href: "/admin/payouts", label: "Payouts", icon: DollarSign },
+  { href: "/admin/org-settings", label: "Organization", icon: Settings },
 ];
 
 // Teacher sees student-focused items
@@ -65,6 +75,7 @@ const hrNav: NavItem[] = [
 
 // Counsellor sees schedule-focused items
 const counsellorNav: NavItem[] = [
+  { href: "/admin/counsellor-dashboard", label: "My Dashboard", icon: LayoutDashboard },
   { href: "/admin/schedule", label: "My Schedule", icon: Calendar },
   { href: "/admin/clients", label: "My Clients", icon: Users },
   { href: "/admin/flagged", label: "Flagged Students", icon: AlertTriangle },
@@ -151,8 +162,8 @@ export function AdminSidebar() {
         {/* Org badge (if in an org) */}
         {orgName && (
           <div className="mx-3 mb-4 rounded-[10px] px-3 py-2" style={{ background: "var(--tag-bg)" }}>
-            <p className="text-[10px] uppercase tracking-[1px]" style={{ color: "var(--accent-primary)" }}>{roleLabel}</p>
-            <p className="mt-0.5 text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{orgName}</p>
+            <p className="text-[11px] font-semibold" style={{ color: "var(--text-primary)" }}>{roleLabel}</p>
+            <p className="mt-0.5 text-[10px]" style={{ color: "var(--text-muted)" }}>at {orgName}</p>
           </div>
         )}
 

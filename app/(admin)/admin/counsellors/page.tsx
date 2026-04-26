@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { AdminTopbar } from "@/components/shared/admin-topbar";
-import { listCounsellorsApi, createCounsellorApi, updateCounsellorApi, deleteCounsellorApi } from "@/lib/counsellors";
-import { Search, Plus, Pencil, Trash2, X, Star } from "lucide-react";
+import { listCounsellorsApi, createCounsellorApi, updateCounsellorApi, deleteCounsellorApi, linkCounsellorUserApi } from "@/lib/counsellors";
+import { Search, Plus, Pencil, Trash2, X, Star, Link2, Calendar } from "lucide-react";
 
 interface CounsellorTag {
   id: number;
@@ -20,15 +21,18 @@ interface Counsellor {
   rating: number;
   photo: string | null;
   status: string;
+  userId: number | null;
   tags: CounsellorTag[];
 }
 
 const COMMON_TAGS = ["Anxiety", "Depression", "CBT", "Trauma", "Stress", "Relationships", "Self-esteem", "OCD", "Mindfulness"];
 
 export default function AdminCounsellorsPage() {
+  const router = useRouter();
   const [counsellors, setCounsellors] = useState<Counsellor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState("");
 
@@ -36,12 +40,18 @@ export default function AdminCounsellorsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingCounsellor, setEditingCounsellor] = useState<Counsellor | null>(null);
   const [formData, setFormData] = useState({
-    name: "", specialization: "", qualifications: "", experience: "", bio: "", tags: "",
+    name: "", specialization: "", qualifications: "", experience: "", bio: "", tags: "", email: "", hourlyRate: "",
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Link user modal
+  const [linkTarget, setLinkTarget] = useState<Counsellor | null>(null);
+  const [linkEmail, setLinkEmail] = useState("");
+  const [linking, setLinking] = useState(false);
+  const [linkMsg, setLinkMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Debounce search
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
@@ -90,6 +100,8 @@ export default function AdminCounsellorsPage() {
       experience: String(c.experience),
       bio: c.bio,
       tags: c.tags.map((t) => t.name).join(", "),
+      email: "",
+      hourlyRate: (c as any).hourlyRate != null ? String((c as any).hourlyRate) : "",
     });
     setPhotoFile(null);
     setFormError("");
@@ -108,6 +120,8 @@ export default function AdminCounsellorsPage() {
       fd.append("qualifications", formData.qualifications);
       fd.append("experience", formData.experience);
       fd.append("bio", formData.bio);
+      if (formData.hourlyRate) fd.append("hourlyRate", formData.hourlyRate);
+      if (formData.email && !editingCounsellor) fd.append("email", formData.email);
 
       const tagsArray = formData.tags
         .split(",")
@@ -135,12 +149,29 @@ export default function AdminCounsellorsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Are you sure you want to deactivate this counsellor?")) return;
     try {
       await deleteCounsellorApi(id);
+      setConfirmDeleteId(null);
       fetchCounsellors();
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to deactivate counsellor");
+      setConfirmDeleteId(null);
+    }
+  }
+
+  async function handleLinkUser(e: React.FormEvent) {
+    e.preventDefault();
+    if (!linkTarget || !linkEmail.trim()) return;
+    setLinking(true);
+    setLinkMsg(null);
+    try {
+      await linkCounsellorUserApi(linkTarget.id, linkEmail.trim());
+      setLinkMsg({ type: "success", text: `Linked to ${linkEmail}` });
+      fetchCounsellors();
+    } catch (err: any) {
+      setLinkMsg({ type: "error", text: err.response?.data?.error || "Failed to link account" });
+    } finally {
+      setLinking(false);
     }
   }
 
@@ -256,7 +287,7 @@ export default function AdminCounsellorsPage() {
 
                 {/* Actions */}
                 <div
-                  className="mt-4 flex gap-3 pt-3"
+                  className="mt-4 flex flex-wrap gap-x-3 gap-y-2 pt-3"
                   style={{ borderTop: "1px solid var(--border-card)" }}
                 >
                   <button
@@ -267,7 +298,22 @@ export default function AdminCounsellorsPage() {
                     <Pencil size={12} /> Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(c.id)}
+                    onClick={() => { setLinkTarget(c); setLinkEmail(""); setLinkMsg(null); }}
+                    className="flex items-center gap-1 text-[11px] font-medium"
+                    style={{ color: c.userId ? "#4ADE80" : "#FFD93D" }}
+                    title={c.userId ? "Linked to user account" : "Link to user account"}
+                  >
+                    <Link2 size={12} /> {c.userId ? "Linked" : "Link User"}
+                  </button>
+                  <button
+                    onClick={() => router.push(`/admin/schedule?id=${c.id}`)}
+                    className="flex items-center gap-1 text-[11px] font-medium"
+                    style={{ color: "#A78BFA" }}
+                  >
+                    <Calendar size={12} /> Schedule
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteId(c.id)}
                     className="flex items-center gap-1 text-[11px] font-medium"
                     style={{ color: "#FF6B6B" }}
                   >
@@ -341,6 +387,18 @@ export default function AdminCounsellorsPage() {
               </div>
 
               <div>
+                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Hourly Rate (₹)</label>
+                <input type="number" value={formData.hourlyRate} onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })} className="input-field" min={0} step="0.01" placeholder="e.g. 1500" />
+              </div>
+
+              {!editingCounsellor && (
+                <div>
+                  <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Email (auto-links user account)</label>
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" placeholder="counsellor@school.edu" />
+                </div>
+              )}
+
+              <div>
                 <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Photo</label>
                 <input
                   ref={fileInputRef}
@@ -366,6 +424,84 @@ export default function AdminCounsellorsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Link User Modal */}
+      {linkTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+          <div className="glass-card w-full max-w-md p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-heading text-[17px] font-semibold" style={{ color: "var(--text-primary)" }}>
+                Link Account — {linkTarget.name}
+              </h3>
+              <button onClick={() => setLinkTarget(null)} style={{ color: "var(--text-muted)" }}>
+                <X size={18} />
+              </button>
+            </div>
+            <p className="mb-4 text-[12px]" style={{ color: "var(--text-muted)" }}>
+              Enter the email of the user account this counsellor logs in with. This enables their counsellor dashboard to show sessions.
+            </p>
+            <form onSubmit={handleLinkUser} className="space-y-3">
+              <input
+                type="email"
+                value={linkEmail}
+                onChange={(e) => setLinkEmail(e.target.value)}
+                placeholder="counsellor@school.edu"
+                required
+                className="w-full rounded-[12px] px-4 py-3 text-[13px] outline-none"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}
+              />
+              {linkMsg && (
+                <p className="rounded-[8px] px-3 py-2 text-[12px]" style={{
+                  background: linkMsg.type === "success" ? "rgba(74,222,128,0.1)" : "rgba(255,107,107,0.1)",
+                  color: linkMsg.type === "success" ? "#4ADE80" : "#FF6B6B",
+                }}>{linkMsg.text}</p>
+              )}
+              <div className="flex gap-2">
+                <button type="submit" disabled={linking}
+                  className="flex-1 rounded-[12px] py-3 text-[13px] font-semibold disabled:opacity-50"
+                  style={{ background: "var(--gradient-cta)", color: "#0B0C10" }}>
+                  {linking ? "Linking…" : "Link Account"}
+                </button>
+                <button type="button" onClick={() => setLinkTarget(null)}
+                  className="rounded-[12px] px-5 py-3 text-[13px]"
+                  style={{ background: "var(--input-bg)", color: "var(--text-muted)" }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Deactivate confirm modal */}
+      {confirmDeleteId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="glass-card mx-4 w-full max-w-sm p-6" style={{ borderRadius: "20px" }}>
+            <h3 className="font-heading mb-2 text-[17px] font-semibold" style={{ color: "var(--text-primary)" }}>
+              Deactivate Counsellor?
+            </h3>
+            <p className="mb-6 text-[13px]" style={{ color: "var(--text-secondary)" }}>
+              This counsellor will be hidden from students and unable to receive new bookings.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleDelete(confirmDeleteId)}
+                className="flex-1 rounded-[12px] py-3 text-[13px] font-semibold"
+                style={{ background: "rgba(255,107,107,0.15)", color: "#FF6B6B" }}
+              >
+                Deactivate
+              </button>
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 rounded-[12px] py-3 text-[13px]"
+                style={{ background: "var(--input-bg)", color: "var(--text-muted)" }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

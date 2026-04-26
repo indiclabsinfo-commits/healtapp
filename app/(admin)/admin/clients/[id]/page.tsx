@@ -181,6 +181,8 @@ export default function StudentProfilePage() {
   const [behaviorLogs, setBehaviorLogs] = useState<BehaviorLog[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [assessments, setAssessments] = useState<any[]>([]);
+  const [moodLogs, setMoodLogs] = useState<Array<{ id: number; mood: number; date: string }>>([]);
+  const [creditBalance, setCreditBalance] = useState<number>(0);
   const [studentName, setStudentName] = useState<string>("");
   const [studentClass, setStudentClass] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -192,12 +194,14 @@ export default function StudentProfilePage() {
   async function load() {
     setLoading(true);
     try {
-      const [logsRes, membersRes, assessRes] = await Promise.all([
+      const [logsRes, membersRes, assessRes, moodRes] = await Promise.all([
         api.get("/behavior-logs", { params: { orgId, studentId: parseInt(id), limit: 100 } }),
         api.get(`/organizations/${orgId}/members`, { params: { role: "STUDENT", limit: 200 } }),
         getUserAssessmentsApi(parseInt(id)).catch(() => ({ data: [] })),
+        api.get(`/users/${parseInt(id)}/mood`, { params: { days: 30 } }).catch(() => ({ data: [] })),
       ]);
       setAssessments(assessRes.data || []);
+      setMoodLogs(moodRes.data?.data || []);
 
       const logs: BehaviorLog[] = logsRes.data.data || [];
       setBehaviorLogs(logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
@@ -207,6 +211,7 @@ export default function StudentProfilePage() {
       if (member) {
         setStudentName(member.user.name);
         setStudentClass(member.class || "");
+        setCreditBalance(member.creditBalance ?? 0);
       }
 
       // Get counsellor's consultations and filter by this student
@@ -375,7 +380,7 @@ export default function StudentProfilePage() {
                                 {CATEGORY_ICONS[log.category]}
                               </div>
                               <span className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>
-                                {log.notes.slice(0, 40)}{log.notes.length > 40 ? "..." : ""}
+                                {(log.notes || "").slice(0, 40)}{(log.notes || "").length > 40 ? "..." : ""}
                               </span>
                             </div>
                             <div className="text-right flex-shrink-0">
@@ -440,7 +445,7 @@ export default function StudentProfilePage() {
                               </span>
                             </div>
                             <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
-                              {log.notes}
+                              {log.notes || "—"}
                             </p>
                           </div>
                         </div>
@@ -509,6 +514,57 @@ export default function StudentProfilePage() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+
+              {/* Mood Trend — last 30 days */}
+              <div className="glass-card p-5" style={{ borderRadius: "20px" }}>
+                <h3 className="font-heading text-[16px] font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
+                  Mood Trend (30 days)
+                </h3>
+                {moodLogs.length === 0 ? (
+                  <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>No mood data logged yet.</p>
+                ) : (
+                  <div>
+                    {/* Mini bar chart */}
+                    <div className="flex items-end gap-1 h-16 mb-3">
+                      {moodLogs.slice(-14).map((m, i) => {
+                        const h = Math.max(8, (m.mood / 5) * 100);
+                        const moodColors = ["", "#FF6B6B", "#FF9F40", "#FFD93D", "#6FFFE9", "#4ADE80"];
+                        return (
+                          <div
+                            key={m.id}
+                            className="flex-1 rounded-t-sm"
+                            style={{ height: `${h}%`, background: moodColors[m.mood] || "var(--accent-primary)", opacity: 0.8 }}
+                            title={`${new Date(m.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}: ${m.mood}/5`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]" style={{ color: "var(--text-muted)" }}>
+                      <span>
+                        Avg: {(moodLogs.reduce((s, m) => s + m.mood, 0) / moodLogs.length).toFixed(1)}/5
+                      </span>
+                      <span>Last {moodLogs.length} entries</span>
+                    </div>
+                    {/* Recent entries */}
+                    <div className="mt-3 space-y-1.5 max-h-[120px] overflow-y-auto">
+                      {moodLogs.slice(-5).reverse().map((m) => {
+                        const moodLabels = ["", "Very Low", "Low", "Neutral", "Good", "Great"];
+                        const moodColors = ["", "#FF6B6B", "#FF9F40", "#FFD93D", "#6FFFE9", "#4ADE80"];
+                        return (
+                          <div key={m.id} className="flex items-center justify-between">
+                            <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                              {new Date(m.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                            </span>
+                            <span className="text-[11px] font-medium" style={{ color: moodColors[m.mood] || "var(--text-primary)" }}>
+                              {moodLabels[m.mood] || m.mood} ({m.mood}/5)
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -658,6 +714,18 @@ export default function StudentProfilePage() {
                     <span className="text-[12px]" style={{ color: "var(--text-muted)" }}>Flags (14d)</span>
                     <span className="font-semibold" style={{ color: flagCount > 2 ? "#FF6B6B" : "var(--text-primary)" }}>
                       {flagCount}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2" style={{ borderTop: "1px solid var(--border-card)" }}>
+                    <span className="text-[12px]" style={{ color: "var(--text-muted)" }}>Credit Balance</span>
+                    <span className="font-semibold" style={{ color: creditBalance > 0 ? "var(--accent-primary)" : "#FF6B6B" }}>
+                      {creditBalance}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px]" style={{ color: "var(--text-muted)" }}>Mood Logs (30d)</span>
+                    <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {moodLogs.length}
                     </span>
                   </div>
                 </div>

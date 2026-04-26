@@ -114,12 +114,12 @@ export default function AdminOrganizationsPage() {
         contactEmail: formData.contactEmail || undefined,
         contactPhone: formData.contactPhone || undefined,
         address: formData.address || undefined,
+        creditBalance: parseInt(formData.creditBalance) || 0,
       };
 
       if (editingOrg) {
         await updateOrganizationApi(editingOrg.id, payload);
       } else {
-        payload.creditBalance = parseInt(formData.creditBalance) || 0;
         await createOrganizationApi(payload);
       }
 
@@ -386,19 +386,24 @@ export default function AdminOrganizationsPage() {
                 />
               </div>
 
-              {!editingOrg && (
-                <div>
-                  <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Initial Credits</label>
-                  <input
-                    type="number"
-                    value={formData.creditBalance}
-                    onChange={(e) => setFormData({ ...formData, creditBalance: e.target.value })}
-                    className="input-field"
-                    min={0}
-                    placeholder="100"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+                  {editingOrg ? "Credits" : "Initial Credits"}
+                </label>
+                <input
+                  type="number"
+                  value={formData.creditBalance}
+                  onChange={(e) => setFormData({ ...formData, creditBalance: e.target.value })}
+                  className="input-field"
+                  min={0}
+                  placeholder="100"
+                />
+                {editingOrg && (
+                  <p className="mt-1 text-[10px]" style={{ color: "var(--text-muted)" }}>
+                    Current balance: {editingOrg.creditBalance}. Enter a new value to update.
+                  </p>
+                )}
+              </div>
 
               <div className="flex gap-3 pt-2">
                 <button

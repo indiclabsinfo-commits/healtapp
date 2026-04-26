@@ -39,3 +39,18 @@ export async function getQuestionsApi(levelId: number) {
   const response = await api.get(`/levels/${levelId}/questions`);
   return response.data;
 }
+
+export async function createCategoryApi(data: { name: string; description?: string }) {
+  const response = await api.post("/categories", data);
+  return response.data;
+}
+
+export async function createQuestionApi(data: {
+  text: string;
+  type: "MCQ" | "SCALE" | "YESNO";
+  options: any;
+  levelId: number;
+}) {
+  const response = await api.post("/questions", data);
+  return response.data;
+}

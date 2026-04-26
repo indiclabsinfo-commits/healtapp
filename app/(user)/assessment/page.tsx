@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Brain, HeartPulse, CheckCircle2, Phone } from "lucide-react";
+import { ArrowLeft, Brain, HeartPulse, CheckCircle2, Phone, ClipboardList } from "lucide-react";
 import { listQuestionnairesApi, getQuestionnaireApi } from "@/lib/questionnaires";
 import { submitAssessmentApi } from "@/lib/assessments";
 
@@ -218,7 +218,7 @@ export default function AssessmentPage() {
     }
   }
 
-  async function startQuiz(questionnaireId: number, type: "PHQ9" | "GAD7") {
+  async function startQuiz(questionnaireId: number, type: "PHQ9" | "GAD7" | null) {
     try {
       setLoading(true);
       setError("");
@@ -279,7 +279,31 @@ export default function AssessmentPage() {
     }
   }
 
-  // --- RESULT SCREEN ---
+  // --- RESULT SCREEN — custom questionnaire (no clinical type) ---
+  if (showResult && !activeType) {
+    const pct = score ?? 0;
+    return (
+      <div className="flex flex-col items-center pt-8 pb-12">
+        <div className="mb-5 flex h-18 w-18 items-center justify-center rounded-[22px] p-4" style={{ background: "rgba(111,255,233,0.12)" }}>
+          <CheckCircle2 size={36} style={{ color: "var(--accent-primary)" }} />
+        </div>
+        <h1 className="font-heading text-[22px] font-semibold" style={{ color: "var(--text-primary)" }}>Assessment Complete</h1>
+        <p className="mt-1 text-[12px]" style={{ color: "var(--text-muted)" }}>{activeQuiz?.title}</p>
+        <div className="glass-card mt-6 w-full max-w-sm p-6 text-center">
+          <p className="text-[10px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>Your Score</p>
+          <p className="font-heading mt-2 text-[52px] font-bold leading-none" style={{ color: "var(--accent-primary)" }}>{Math.round(pct)}%</p>
+          <div className="mt-4 h-2 w-full rounded-full" style={{ background: "var(--progress-bg)" }}>
+            <div className="h-2 rounded-full" style={{ width: `${Math.max(pct, 4)}%`, background: "var(--gradient-cta)" }} />
+          </div>
+        </div>
+        <button onClick={() => { setShowResult(false); setQuizMode(false); setActiveQuiz(null); setScore(null); }} className="cta-button mt-8 w-full max-w-sm">
+          Done
+        </button>
+      </div>
+    );
+  }
+
+  // --- RESULT SCREEN — clinical questionnaire ---
   if (showResult && activeType) {
     const pct = score ?? 0;
     const meta = ASSESSMENT_META[activeType];
@@ -499,6 +523,7 @@ export default function AssessmentPage() {
   // --- BROWSE MODE ---
   const phq9Qs = questionnaires.filter((q) => detectAssessmentType(q.title) === "PHQ9");
   const gad7Qs = questionnaires.filter((q) => detectAssessmentType(q.title) === "GAD7");
+  const otherQs = questionnaires.filter((q) => detectAssessmentType(q.title) === null);
 
   function getQForLang(list: Questionnaire[], lang: Lang): Questionnaire | null {
     return list.find((q) => (q.language || detectLangFromTitle(q.title)) === lang) || null;
@@ -621,7 +646,45 @@ export default function AssessmentPage() {
             );
           })}
 
-          {phq9Qs.length === 0 && gad7Qs.length === 0 && (
+          {/* Other / custom questionnaires */}
+          {otherQs.length > 0 && (
+            <>
+              <p className="mt-2 px-1 text-[10px] font-normal uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+                Other Assessments
+              </p>
+              {otherQs.map((q) => (
+                <div key={q.id} className="glass-card overflow-hidden" style={{ borderRadius: "20px" }}>
+                  <div className="flex items-center gap-4 p-5">
+                    <div
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[14px]"
+                      style={{ background: "rgba(167,139,250,0.15)" }}
+                    >
+                      <ClipboardList size={20} style={{ color: "#A78BFA" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-semibold truncate" style={{ color: "var(--text-primary)" }}>
+                        {q.title}
+                      </p>
+                      <p className="mt-0.5 text-[11px]" style={{ color: "var(--text-muted)" }}>
+                        {q.questionIds?.length ?? "?"} questions · ~{Math.ceil((q.questionIds?.length ?? 5) / 3)} min
+                      </p>
+                    </div>
+                  </div>
+                  <div className="px-5 pb-4">
+                    <button
+                      onClick={() => startQuiz(q.id, null)}
+                      className="w-full rounded-[14px] py-3 text-[13px] font-semibold transition-all"
+                      style={{ background: "#A78BFA", color: "var(--bg-primary)" }}
+                    >
+                      Start Assessment
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {phq9Qs.length === 0 && gad7Qs.length === 0 && otherQs.length === 0 && (
             <div className="mt-12 flex flex-col items-center">
               <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>No assessments available</p>
             </div>
