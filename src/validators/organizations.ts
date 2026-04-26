@@ -43,6 +43,40 @@ export const allocateCreditsSchema = z.object({
   amount: z.number().int().positive('Amount must be a positive integer'),
 });
 
+export const allocateMemberCreditsSchema = z.object({
+  amount: z.number().int().positive('Amount must be a positive integer'),
+});
+
+export const assignStudentSchema = z.object({
+  studentMemberId: z.number().int().positive('studentMemberId is required'),
+  counsellorMemberId: z.number().int().positive('counsellorMemberId is required'),
+});
+
+export const unassignStudentSchema = z.object({
+  studentMemberId: z.number().int().positive('studentMemberId is required'),
+  counsellorMemberId: z.number().int().positive('counsellorMemberId is required'),
+});
+
+export const bulkAssignClassSchema = z.object({
+  className: z.string().min(1, 'Class name is required'),
+  counsellorMemberId: z.number().int().positive('counsellorMemberId is required'),
+});
+
+export const saveConsentSchema = z.object({
+  status: z.enum(['PENDING', 'GRANTED', 'DENIED', 'WITHDRAWN'], { required_error: 'Status required' }),
+  parentName: z.string().optional(),
+  parentEmail: z.string().email().optional().or(z.literal('')),
+  parentPhone: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const sendInviteSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  role: z.enum(MEMBER_ROLES, { required_error: 'Role is required' }),
+  class: z.string().optional(),
+  department: z.string().optional(),
+});
+
 export const registerOrganizationSchema = z.object({
   name: z.string().min(2, 'School/org name must be at least 2 characters'),
   type: z.enum(['SCHOOL', 'CORPORATE'], { required_error: 'Type is required' }),

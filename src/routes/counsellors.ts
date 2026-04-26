@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import * as counsellorController from '../controllers/counsellors';
 import { requireAuth, requireAdmin, requireAdminOrOrgAdmin } from '../middleware/auth';
-import { validateMultipart } from '../middleware/validate';
+import { validate, validateMultipart } from '../middleware/validate';
 import { uploadPhoto } from '../middleware/upload';
-import { createCounsellorSchema, updateCounsellorSchema } from '../validators/counsellors';
+import { createCounsellorSchema, updateCounsellorSchema, linkCounsellorUserSchema } from '../validators/counsellors';
 
 const router = Router();
 

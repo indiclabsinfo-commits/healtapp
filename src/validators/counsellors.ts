@@ -27,3 +27,7 @@ export const updateCounsellorSchema = z.object({
   organizationId: z.number().int().positive().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });
+
+export const linkCounsellorUserSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});

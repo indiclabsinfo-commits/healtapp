@@ -9,6 +9,8 @@ import {
   resetPasswordSchema,
   updateProfileSchema,
   changePasswordSchema,
+  refreshTokenSchema,
+  pushTokenSchema,
 } from '../validators/auth';
 
 const router = Router();
@@ -16,7 +18,7 @@ const router = Router();
 // Public routes
 router.post('/register', validate(registerSchema), authController.register);
 router.post('/login', validate(loginSchema), authController.login);
-router.post('/refresh', authController.refresh);
+router.post('/refresh', validate(refreshTokenSchema), authController.refresh);
 router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword);
 router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
 
@@ -24,6 +26,6 @@ router.post('/reset-password', validate(resetPasswordSchema), authController.res
 router.get('/me', requireAuth, authController.getMe);
 router.put('/me', requireAuth, validate(updateProfileSchema), authController.updateMe);
 router.put('/change-password', requireAuth, validate(changePasswordSchema), authController.changePassword);
-router.post('/push-token', requireAuth, authController.savePushToken);
+router.post('/push-token', requireAuth, validate(pushTokenSchema), authController.savePushToken);
 
 export default router;

@@ -12,7 +12,13 @@ import {
   addMemberSchema,
   updateMemberRoleSchema,
   allocateCreditsSchema,
+  allocateMemberCreditsSchema,
   registerOrganizationSchema,
+  assignStudentSchema,
+  unassignStudentSchema,
+  bulkAssignClassSchema,
+  saveConsentSchema,
+  sendInviteSchema,
 } from '../validators/organizations';
 import { uploadCSV } from '../middleware/upload';
 
@@ -58,7 +64,7 @@ router.delete('/:id/members/:memberId', requireAuth, attachOrgMembership, requir
 router.post('/:id/members/bulk', requireAuth, attachOrgMembership, requireOrgAdmin, uploadCSV, orgController.bulkAddMembers);
 
 // Org Admin — email invites
-router.post('/:id/members/invite', requireAuth, attachOrgMembership, requireOrgAdmin, inviteController.sendInvite);
+router.post('/:id/members/invite', requireAuth, attachOrgMembership, requireOrgAdmin, validate(sendInviteSchema), inviteController.sendInvite);
 router.get('/:id/invites', requireAuth, attachOrgMembership, requireOrgAdmin, inviteController.listInvites);
 
 // Org Admin — org analytics (principal dashboard)
@@ -78,20 +84,20 @@ router.get('/:id/my-counsellors', requireAuth, orgController.getMyAssignedCounse
 
 // Org Admin — counsellor-student assignments
 router.get('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.listAssignments);
-router.post('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.assignStudent);
-router.delete('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.unassignStudent);
+router.post('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, validate(assignStudentSchema), orgController.assignStudent);
+router.delete('/:id/assignments', requireAuth, attachOrgMembership, requireOrgAdmin, validate(unassignStudentSchema), orgController.unassignStudent);
 
 // Org Admin — bulk assign entire class to counsellor
-router.post('/:id/assignments/bulk-class', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.bulkAssignClass);
+router.post('/:id/assignments/bulk-class', requireAuth, attachOrgMembership, requireOrgAdmin, validate(bulkAssignClassSchema), orgController.bulkAssignClass);
 
 // Org Admin — parent consent management
 router.get('/:id/consents', requireAuth, attachOrgMembership, requireOrgAdmin, consentController.listConsents);
-router.put('/:id/consents/:memberId', requireAuth, attachOrgMembership, requireOrgAdmin, consentController.saveConsent);
+router.put('/:id/consents/:memberId', requireAuth, attachOrgMembership, requireOrgAdmin, validate(saveConsentSchema), consentController.saveConsent);
 
-// Super Admin — allocate credits to organization
-router.post('/:id/credits', requireAuth, requireAdmin, validate(allocateCreditsSchema), orgController.allocateCredits);
+// Super Admin or Org Admin — allocate credits to organization
+router.post('/:id/credits', requireAuth, attachOrgMembership, requireOrgAdmin, validate(allocateCreditsSchema), orgController.allocateCredits);
 
 // Org Admin — allocate credits to individual member
-router.patch('/:id/members/:memberId/credits', requireAuth, attachOrgMembership, requireOrgAdmin, orgController.allocateMemberCredits);
+router.patch('/:id/members/:memberId/credits', requireAuth, attachOrgMembership, requireOrgAdmin, validate(allocateMemberCreditsSchema), orgController.allocateMemberCredits);
 
 export default router;
