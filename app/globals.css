@@ -15,9 +15,9 @@
     --accent-primary: #0D9488;
     --accent-secondary: #0A7A70;
     --text-primary: #1A1A2E;
-    --text-secondary: rgba(0, 0, 0, 0.6);
-    --text-muted: rgba(0, 0, 0, 0.35);
-    --text-disabled: rgba(0, 0, 0, 0.2);
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --text-muted: rgba(0, 0, 0, 0.55);
+    --text-disabled: rgba(0, 0, 0, 0.3);
     --gradient-cta: linear-gradient(135deg, #0D9488, #0A7A70);
     --gradient-splash: linear-gradient(160deg, #E6FFFA, #B2F5EA, #81E6D9);
     --nav-bg: rgba(255, 255, 255, 0.95);
@@ -44,9 +44,9 @@
     --accent-primary: #6FFFE9;
     --accent-secondary: #5BC0BE;
     --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.6);
-    --text-muted: rgba(255, 255, 255, 0.35);
-    --text-disabled: rgba(255, 255, 255, 0.2);
+    --text-secondary: rgba(255, 255, 255, 0.75);
+    --text-muted: rgba(255, 255, 255, 0.55);
+    --text-disabled: rgba(255, 255, 255, 0.3);
     --gradient-cta: linear-gradient(135deg, #6FFFE9, #5BC0BE);
     --gradient-splash: linear-gradient(160deg, #0B0C10, #0D1117, #0B1A1A);
     --nav-bg: rgba(11, 12, 16, 0.95);
@@ -190,9 +190,16 @@
   }
 
   /* Style select dropdowns consistently */
-  .input-field option {
+  .input-field option,
+  .input-field optgroup {
     background: var(--bg-primary);
     color: var(--text-primary);
+  }
+
+  /* Force browser native dropdown to respect dark/light mode */
+  .dark select,
+  .dark .input-field {
+    color-scheme: dark;
   }
 
   .pill-active {

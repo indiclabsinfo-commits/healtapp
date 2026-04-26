@@ -35,13 +35,13 @@ export default function LoginPage() {
         // Check member role for routing
         const primaryRole = memberships[0]?.role;
         if (primaryRole === "ORG_ADMIN") {
-          router.push("/admin/dashboard");
+          router.push("/admin/users");
         } else if (primaryRole === "TEACHER") {
-          router.push("/admin/dashboard"); // Teacher uses admin layout
+          router.push("/admin/students");
         } else if (primaryRole === "HR") {
-          router.push("/admin/dashboard");
+          router.push("/admin/users");
         } else if (primaryRole === "COUNSELLOR") {
-          router.push("/admin/dashboard");
+          router.push("/admin/counsellor-dashboard");
         } else {
           router.push("/dashboard");
         }
@@ -104,13 +104,17 @@ export default function LoginPage() {
         {/* Email */}
         <div>
           <label
+            htmlFor="login-email"
             className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]"
             style={{ color: "var(--text-muted)" }}
           >
             Email
           </label>
           <input
+            id="login-email"
+            name="email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="hello@example.com"
@@ -122,6 +126,7 @@ export default function LoginPage() {
         {/* Password */}
         <div>
           <label
+            htmlFor="login-password"
             className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]"
             style={{ color: "var(--text-muted)" }}
           >
@@ -129,7 +134,10 @@ export default function LoginPage() {
           </label>
           <div className="relative">
             <input
+              id="login-password"
+              name="password"
               type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -139,6 +147,8 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-medium"
               style={{ color: "var(--accent-primary)" }}
             >

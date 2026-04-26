@@ -64,14 +64,14 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         {/* Name */}
         <div>
-          <label
-            className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]"
-            style={{ color: "var(--text-muted)" }}
-          >
+          <label htmlFor="register-name" className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
             Full Name
           </label>
           <input
+            id="register-name"
+            name="name"
             type="text"
+            autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your full name"
@@ -82,14 +82,14 @@ export default function RegisterPage() {
 
         {/* Email */}
         <div>
-          <label
-            className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]"
-            style={{ color: "var(--text-muted)" }}
-          >
+          <label htmlFor="register-email" className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
             Email
           </label>
           <input
+            id="register-email"
+            name="email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="hello@example.com"
@@ -100,15 +100,15 @@ export default function RegisterPage() {
 
         {/* Password */}
         <div>
-          <label
-            className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]"
-            style={{ color: "var(--text-muted)" }}
-          >
+          <label htmlFor="register-password" className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
             Password
           </label>
           <div className="relative">
             <input
+              id="register-password"
+              name="password"
               type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -119,6 +119,8 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-medium"
               style={{ color: "var(--accent-primary)" }}
             >
@@ -129,14 +131,14 @@ export default function RegisterPage() {
 
         {/* Confirm Password */}
         <div>
-          <label
-            className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]"
-            style={{ color: "var(--text-muted)" }}
-          >
+          <label htmlFor="register-confirm" className="mb-2 block text-[10px] font-normal uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
             Confirm Password
           </label>
           <input
+            id="register-confirm"
+            name="confirmPassword"
             type="password"
+            autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="••••••••"

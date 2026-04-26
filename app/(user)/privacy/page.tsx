@@ -111,40 +111,80 @@ export default function PrivacyPage() {
 
         {showPwForm ? (
           <form onSubmit={handleChangePw} className="space-y-3">
-            <div className="relative">
-              <input
-                type={showCurrent ? "text" : "password"}
-                placeholder="Current password"
-                value={current}
-                onChange={(e) => setCurrent(e.target.value)}
-                required
-                className="input-field pr-10 text-[13px]"
-              />
-              <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }}>
-                {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
+            <div>
+              <label htmlFor="current-password" className="mb-1.5 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+                Current password
+              </label>
+              <div className="relative">
+                <input
+                  id="current-password"
+                  name="currentPassword"
+                  type={showCurrent ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={current}
+                  onChange={(e) => setCurrent(e.target.value)}
+                  required
+                  className="input-field pr-10 text-[13px]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  aria-label={showCurrent ? "Hide current password" : "Show current password"}
+                  aria-pressed={showCurrent}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
             </div>
-            <div className="relative">
-              <input
-                type={showNew ? "text" : "password"}
-                placeholder="New password (min 8 characters)"
-                value={newPw}
-                onChange={(e) => setNewPw(e.target.value)}
-                required
-                className="input-field pr-10 text-[13px]"
-              />
-              <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }}>
-                {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
+            <div>
+              <label htmlFor="new-password" className="mb-1.5 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+                New password
+              </label>
+              <div className="relative">
+                <input
+                  id="new-password"
+                  name="newPassword"
+                  type={showNew ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="At least 8 characters"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  required
+                  className="input-field pr-10 text-[13px]"
+                  aria-describedby="new-password-hint"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNew(!showNew)}
+                  aria-label={showNew ? "Hide new password" : "Show new password"}
+                  aria-pressed={showNew}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <p id="new-password-hint" className="mt-1 text-[10px]" style={{ color: "var(--text-muted)" }}>
+                Use a strong password with at least 8 characters.
+              </p>
             </div>
-            <input
-              type="password"
-              placeholder="Confirm new password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-              className="input-field text-[13px]"
-            />
+            <div>
+              <label htmlFor="confirm-password" className="mb-1.5 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+                Confirm new password
+              </label>
+              <input
+                id="confirm-password"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                className="input-field text-[13px]"
+              />
+            </div>
             <div className="flex gap-2">
               <button type="submit" disabled={saving} className="cta-button flex-1 disabled:opacity-50" style={{ padding: "12px" }}>
                 {saving ? "Saving…" : "Update Password"}

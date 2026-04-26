@@ -71,28 +71,26 @@ const orgAdminNav: NavItem[] = [
   { href: "/admin/org-settings", label: "Organization", icon: Settings },
 ];
 
-// Teacher sees student-focused items
+// Teacher sees student-focused items.
+// Items removed pending backend support: students (GET /users blocked), notice-change
+// (GET /orgs/:id/members blocked), analytics (/analytics/admin blocked).
 const teacherNav: NavItem[] = [
-  { href: "/admin/students", label: "My Students", icon: Users },
-  { href: "/admin/notice-change", label: "Notice a Change", icon: Bell },
   { href: "/admin/behavior-log", label: "Behavior Log", icon: AlertTriangle },
   { href: "/admin/assignments", label: "Assignments", icon: FileText },
-  { href: "/admin/analytics", label: "Class Wellness", icon: BarChart3 },
 ];
 
-// HR sees employee-focused items
-const hrNav: NavItem[] = [
-  { href: "/admin/users", label: "Employees", icon: Users },
-  { href: "/admin/analytics", label: "Wellness Reports", icon: BarChart3 },
-];
+// HR sees employee-focused items.
+// All routes currently 403 for HR (no middleware support yet). Empty until backend adds
+// requireHROrAbove + scoped endpoints.
+const hrNav: NavItem[] = [];
 
-// Counsellor sees schedule + clients
+// Counsellor sees schedule + clients.
+// /admin/analytics removed — requires Super Admin role. Use /admin/flagged instead.
 const counsellorNav: NavItem[] = [
   { href: "/admin/counsellor-dashboard", label: "My Dashboard", icon: LayoutDashboard },
   { href: "/admin/schedule", label: "My Schedule", icon: Calendar },
   { href: "/admin/clients", label: "My Clients", icon: Users },
   { href: "/admin/flagged", label: "Flagged Students", icon: AlertTriangle },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 function getNavForRole(isAdmin: boolean, memberRole: string | null): { nav: NavItem[]; roleLabel: string } {

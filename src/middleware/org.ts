@@ -129,3 +129,34 @@ export function requireTeacher(req: Request, res: Response, next: NextFunction) 
 
   next();
 }
+
+/**
+ * Allows HR + ORG_ADMIN (and Super Admin). For HR-scoped read endpoints.
+ */
+export function requireHR(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.role === 'ADMIN') return next();
+  if (!req.orgMembership) {
+    return res.status(403).json({ success: false, error: 'Not a member of this organization', code: 'FORBIDDEN' });
+  }
+  const allowed = ['HR', 'ORG_ADMIN'];
+  if (!allowed.includes(req.orgMembership.role)) {
+    return res.status(403).json({ success: false, error: 'HR or admin access required', code: 'FORBIDDEN' });
+  }
+  next();
+}
+
+/**
+ * Broad org-staff access — TEACHER/HR/COUNSELLOR/ORG_ADMIN. Use for read endpoints
+ * that should be available to any non-student member of the org.
+ */
+export function requireOrgStaff(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.role === 'ADMIN') return next();
+  if (!req.orgMembership) {
+    return res.status(403).json({ success: false, error: 'Not a member of this organization', code: 'FORBIDDEN' });
+  }
+  const allowed = ['TEACHER', 'HR', 'COUNSELLOR', 'ORG_ADMIN'];
+  if (!allowed.includes(req.orgMembership.role)) {
+    return res.status(403).json({ success: false, error: 'Org staff access required', code: 'FORBIDDEN' });
+  }
+  next();
+}
