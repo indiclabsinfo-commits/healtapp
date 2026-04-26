@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Brain, HeartPulse, CheckCircle2, Phone, ClipboardList } from "lucide-react";
 import { listQuestionnairesApi, getQuestionnaireApi } from "@/lib/questionnaires";
 import { submitAssessmentApi } from "@/lib/assessments";
+import { getLanguage } from "@/lib/preferences";
 
 interface Question {
   id: number;
@@ -189,8 +190,13 @@ export default function AssessmentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Selection state
+  // Selection state — default to user's saved language preference
   const [selectedLang, setSelectedLang] = useState<Record<string, Lang>>({ PHQ9: "en", GAD7: "en" });
+
+  useEffect(() => {
+    const saved = getLanguage();
+    setSelectedLang({ PHQ9: saved, GAD7: saved });
+  }, []);
 
   // Quiz mode
   const [quizMode, setQuizMode] = useState(false);

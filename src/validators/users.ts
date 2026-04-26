@@ -8,7 +8,9 @@ export const updateUserSchema = z.object({
   age: z.number().int().positive().optional(),
   avatar: z.string().optional(),
   pushToken: z.string().optional(),
-  role: z.enum(['USER', 'ADMIN']).optional(),
+  // Accepts platform roles (USER, ADMIN) and org roles (STUDENT, etc.). Controller strips
+  // platform-role escalation from non-super-admins; service routes org roles to OrganizationMember.
+  role: z.enum(['USER', 'ADMIN', 'STUDENT', 'EMPLOYEE', 'TEACHER', 'HR', 'ORG_ADMIN', 'COUNSELLOR']).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });
 

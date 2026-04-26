@@ -5,7 +5,8 @@ import { useTheme } from "next-themes";
 import { ArrowLeft, Sun, Moon, Globe, Heart, Info } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import api from "@/lib/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getLanguage, setLanguage, LANG_STORAGE_KEY } from "@/lib/preferences";
 
 const LANGS = [
   { code: "en", label: "English" },
@@ -20,6 +21,16 @@ export default function SettingsPage() {
   const logout = useAuthStore((s) => s.logout);
   const [lang, setLang] = useState("en");
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  // Hydrate language preference from localStorage on mount
+  useEffect(() => {
+    setLang(getLanguage());
+  }, []);
+
+  function changeLanguage(code: string) {
+    setLang(code);
+    setLanguage(code);
+  }
 
   function handleLogout() {
     logout();
@@ -80,7 +91,7 @@ export default function SettingsPage() {
           {LANGS.map((l) => (
             <button
               key={l.code}
-              onClick={() => setLang(l.code)}
+              onClick={() => changeLanguage(l.code)}
               className="flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-[13px] transition-all"
               style={{
                 background: lang === l.code ? "var(--pill-active-bg)" : "transparent",

@@ -9,7 +9,8 @@ export async function listUsers(req: Request, res: Response, next: NextFunction)
     const search = req.query.search as string | undefined;
     const status = req.query.status as string | undefined;
 
-    const { data, pagination } = await userService.listUsers(page, limit, search, status);
+    const orgId = req.adminOrgId; // null = super admin sees all, number = org-scoped
+    const { data, pagination } = await userService.listUsers(page, limit, search, status, orgId ?? undefined);
     paginatedResponse(res, data, pagination);
   } catch (error: any) {
     if (error.status) {
@@ -43,7 +44,17 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
       return errorResponse(res, 'Invalid user ID', 400, 'INVALID_ID');
     }
 
-    const user = await userService.updateUser(id, req.body);
+    const data = { ...req.body };
+    // SECURITY: only super admins can change platform role (USER ↔ ADMIN).
+    // Non-super-admins are allowed to set ORG roles (Student/Teacher/etc) — service routes those
+    // to OrganizationMember, not User.role — but must NOT be able to set role=ADMIN to escalate.
+    const isSuperAdmin = req.user?.role === 'ADMIN' && req.adminOrgId == null;
+    const PLATFORM_ROLES = ['USER', 'ADMIN'];
+    if (!isSuperAdmin && data.role && PLATFORM_ROLES.includes(data.role)) {
+      delete data.role;
+    }
+
+    const user = await userService.updateUser(id, data, req.adminOrgId ?? undefined);
     successResponse(res, user);
   } catch (error: any) {
     if (error.status) {
@@ -97,6 +108,19 @@ export async function bulkHistory(req: Request, res: Response, next: NextFunctio
     if (error.status) {
       return errorResponse(res, error.message, error.status, error.code);
     }
+    next(error);
+  }
+}
+
+export async function getUserMoodLogs(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return errorResponse(res, 'Invalid user ID', 400, 'INVALID_ID');
+    const days = parseInt(req.query.days as string) || 30;
+    const logs = await userService.getUserMoodLogs(id, days);
+    successResponse(res, logs);
+  } catch (error: any) {
+    if (error.status) return errorResponse(res, error.message, error.status, error.code);
     next(error);
   }
 }

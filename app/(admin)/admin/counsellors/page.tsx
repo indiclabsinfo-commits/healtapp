@@ -357,50 +357,52 @@ export default function AdminCounsellorsPage() {
 
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
-                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Name</label>
-                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required />
+                <label htmlFor="counsellor-name" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Name</label>
+                <input id="counsellor-name" name="name" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input-field" required />
               </div>
 
               <div>
-                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Specialization</label>
-                <input type="text" value={formData.specialization} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} className="input-field" required />
+                <label htmlFor="counsellor-specialization" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Specialization</label>
+                <input id="counsellor-specialization" name="specialization" type="text" value={formData.specialization} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} className="input-field" required />
               </div>
 
               <div>
-                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Qualifications</label>
-                <textarea value={formData.qualifications} onChange={(e) => setFormData({ ...formData, qualifications: e.target.value })} className="input-field" rows={3} required />
+                <label htmlFor="counsellor-qualifications" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Qualifications</label>
+                <textarea id="counsellor-qualifications" name="qualifications" value={formData.qualifications} onChange={(e) => setFormData({ ...formData, qualifications: e.target.value })} className="input-field" rows={3} required />
               </div>
 
               <div>
-                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Experience (years)</label>
-                <input type="number" value={formData.experience} onChange={(e) => setFormData({ ...formData, experience: e.target.value })} className="input-field" min={0} required />
+                <label htmlFor="counsellor-experience" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Experience (years)</label>
+                <input id="counsellor-experience" name="experience" type="number" value={formData.experience} onChange={(e) => setFormData({ ...formData, experience: e.target.value })} className="input-field" min={0} required />
               </div>
 
               <div>
-                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Bio</label>
-                <textarea value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} className="input-field" rows={3} required />
+                <label htmlFor="counsellor-bio" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Bio</label>
+                <textarea id="counsellor-bio" name="bio" value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} className="input-field" rows={3} required />
               </div>
 
               <div>
-                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Tags (comma-separated)</label>
-                <input type="text" value={formData.tags} onChange={(e) => setFormData({ ...formData, tags: e.target.value })} className="input-field" placeholder="Anxiety, CBT, Trauma" />
+                <label htmlFor="counsellor-tags" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Tags (comma-separated)</label>
+                <input id="counsellor-tags" name="tags" type="text" value={formData.tags} onChange={(e) => setFormData({ ...formData, tags: e.target.value })} className="input-field" placeholder="Anxiety, CBT, Trauma" />
               </div>
 
               <div>
-                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Hourly Rate (₹)</label>
-                <input type="number" value={formData.hourlyRate} onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })} className="input-field" min={0} step="0.01" placeholder="e.g. 1500" />
+                <label htmlFor="counsellor-hourly-rate" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Hourly Rate (₹)</label>
+                <input id="counsellor-hourly-rate" name="hourlyRate" type="number" value={formData.hourlyRate} onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })} className="input-field" min={0} step="0.01" placeholder="e.g. 1500" />
               </div>
 
               {!editingCounsellor && (
                 <div>
-                  <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Email (auto-links user account)</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" placeholder="counsellor@school.edu" />
+                  <label htmlFor="counsellor-email" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Email (auto-links user account)</label>
+                  <input id="counsellor-email" name="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" placeholder="counsellor@school.edu" />
                 </div>
               )}
 
               <div>
-                <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Photo</label>
+                <label htmlFor="counsellor-photo" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Photo</label>
                 <input
+                  id="counsellor-photo"
+                  name="photo"
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"

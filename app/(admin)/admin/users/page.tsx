@@ -86,7 +86,9 @@ export default function AdminUsersPage() {
 
   function openEditModal(user: User) {
     setEditingUser(user);
-    setEditForm({ name: user.name, email: user.email, role: user.role, status: user.status });
+    // Super admin edits platform role; org admin edits org role.
+    const initialRole = isAdmin ? user.role : (user.orgRole || "STUDENT");
+    setEditForm({ name: user.name, email: user.email, role: initialRole, status: user.status });
     setEditError("");
   }
 
@@ -378,16 +380,31 @@ export default function AdminUsersPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+                  <label htmlFor="edit-user-role" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
                     Role
                   </label>
                   <select
+                    id="edit-user-role"
+                    name="role"
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                     className="input-field"
                   >
-                    <option value="USER">User</option>
-                    <option value="ADMIN">Admin (Super)</option>
+                    {isAdmin ? (
+                      <>
+                        <option value="USER">User</option>
+                        <option value="ADMIN">Admin (Super)</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="STUDENT">Student</option>
+                        <option value="TEACHER">Teacher</option>
+                        <option value="COUNSELLOR">Counsellor</option>
+                        <option value="HR">HR</option>
+                        <option value="EMPLOYEE">Employee</option>
+                        <option value="ORG_ADMIN">Org Admin</option>
+                      </>
+                    )}
                   </select>
                 </div>
                 <div>
