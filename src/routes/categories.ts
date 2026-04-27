@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as categoryController from '../controllers/categories';
-import { requireAuth, requireAdmin } from '../middleware/auth';
+import { requireAuth, requireAdminOrOrgAdmin } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { createCategorySchema, updateCategorySchema } from '../validators/categories';
 
@@ -10,9 +10,9 @@ const router = Router();
 router.get('/', requireAuth, categoryController.listCategories);
 router.get('/:id/levels', requireAuth, categoryController.getLevelsByCategory);
 
-// Admin-only
-router.post('/', requireAuth, requireAdmin, validate(createCategorySchema), categoryController.createCategory);
-router.put('/:id', requireAuth, requireAdmin, validate(updateCategorySchema), categoryController.updateCategory);
-router.delete('/:id', requireAuth, requireAdmin, categoryController.deleteCategory);
+// Super Admin OR Org Admin — both can manage assessment taxonomy
+router.post('/', requireAuth, requireAdminOrOrgAdmin, validate(createCategorySchema), categoryController.createCategory);
+router.put('/:id', requireAuth, requireAdminOrOrgAdmin, validate(updateCategorySchema), categoryController.updateCategory);
+router.delete('/:id', requireAuth, requireAdminOrOrgAdmin, categoryController.deleteCategory);
 
 export default router;
