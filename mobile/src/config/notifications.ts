@@ -66,11 +66,18 @@ export async function registerForPushNotifications(): Promise<string | null> {
       });
     }
 
-    // Send token to backend (optional — for server-side push)
+    // Send token to backend. Backend binds the token to req.user.id from JWT;
+    // we do NOT pass userId from client (would be an IDOR risk). Surface non-2xx
+    // errors so we notice if registration silently breaks (the previous swallow
+    // hid auth bugs).
     try {
       await api.post('/auth/push-token', { token, platform: Platform.OS });
-    } catch {
-      // Server endpoint may not exist yet — silent fail
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status && status !== 401) {
+        // 401 will be auto-handled by interceptor refresh; everything else is a real problem
+        console.warn('[push] failed to register token', status, err?.response?.data);
+      }
     }
 
     return token;

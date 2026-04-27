@@ -33,6 +33,11 @@ export default function LoginScreen({ navigation }: Props) {
       Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
+    // Pre-flight email format check — saves a server round-trip on typos
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -75,6 +80,8 @@ export default function LoginScreen({ navigation }: Props) {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
             />
           </View>
 
@@ -90,10 +97,15 @@ export default function LoginScreen({ navigation }: Props) {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                autoComplete="password"
+                textContentType="password"
               />
               <TouchableOpacity
                 style={styles.showToggle}
                 onPress={() => setShowPassword(!showPassword)}
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showPassword }}
               >
                 <Text style={styles.showText}>
                   {showPassword ? 'Hide' : 'Show'}
@@ -102,10 +114,7 @@ export default function LoginScreen({ navigation }: Props) {
             </View>
           </View>
 
-          {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotRow}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </TouchableOpacity>
+          {/* Forgot Password — hidden until backend flow is wired (was a dead button) */}
 
           {/* Sign In Button */}
           <TouchableOpacity

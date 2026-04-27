@@ -39,5 +39,6 @@ export const refreshTokenSchema = z.object({
 });
 
 export const pushTokenSchema = z.object({
-  pushToken: z.string().min(10, 'Push token is required'),
+  token: z.string().min(10, 'Push token is required'),
+  platform: z.enum(['ios', 'android', 'web']).optional(),
 });

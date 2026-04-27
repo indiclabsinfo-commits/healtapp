@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, glassCard } from '../theme/colors';
@@ -59,6 +60,34 @@ export default function SessionsScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
+
+  async function handleCancel(session: Session) {
+    Alert.alert(
+      'Cancel Session?',
+      `Cancel your ${session.duration || 60}-minute session with ${session.counsellor?.name || 'counsellor'}?`,
+      [
+        { text: 'Keep', style: 'cancel' },
+        {
+          text: 'Cancel Session',
+          style: 'destructive',
+          onPress: async () => {
+            if (cancellingId) return; // re-entry guard
+            setCancellingId(session.id);
+            try {
+              await api.put(`/consultations/${session.id}/status`, { status: 'CANCELLED' });
+              await fetchSessions();
+              setSelectedSession(null);
+            } catch (err: any) {
+              Alert.alert('Error', err?.response?.data?.error || 'Failed to cancel session.');
+            } finally {
+              setCancellingId(null);
+            }
+          },
+        },
+      ]
+    );
+  }
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -180,6 +209,25 @@ export default function SessionsScreen({ navigation }: Props) {
                 Booked on: {formatDate(session.createdAt)}
               </Text>
             </View>
+
+            {session.status === 'BOOKED' && (
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => handleCancel(session)}
+                disabled={cancellingId === session.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Cancel session with ${session.counsellor?.name || 'counsellor'}`}
+              >
+                {cancellingId === session.id ? (
+                  <ActivityIndicator size="small" color={colors.accentRed} />
+                ) : (
+                  <>
+                    <Ionicons name="close-circle-outline" size={14} color={colors.accentRed} />
+                    <Text style={styles.cancelButtonText}>Cancel session</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </TouchableOpacity>
@@ -407,6 +455,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
   },
+  cancelButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, marginTop: 12, paddingVertical: 10,
+    borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,107,107,0.25)',
+    backgroundColor: 'rgba(255,107,107,0.08)',
+  },
+  cancelButtonText: { fontSize: 12, fontWeight: '600', color: colors.accentRed },
 
   // Empty state
   emptyContainer: {

@@ -25,9 +25,18 @@ type Props = {
 export default function OrgCodeScreen({ navigation }: Props) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockUntil, setLockUntil] = useState<number | null>(null);
   const setSelectedOrg = useAuthStore((s) => s.setSelectedOrg);
 
   const handleContinue = async () => {
+    if (loading) return; // Re-entry guard
+    // Client-side brute-force throttle: 5 failed attempts → 30s lockout. Server should also rate-limit.
+    if (lockUntil && Date.now() < lockUntil) {
+      const wait = Math.ceil((lockUntil - Date.now()) / 1000);
+      Alert.alert('Too many attempts', `Please wait ${wait}s before trying again.`);
+      return;
+    }
     const trimmed = code.trim();
     if (!trimmed) {
       Alert.alert('Error', 'Please enter an organization code.');
@@ -36,7 +45,7 @@ export default function OrgCodeScreen({ navigation }: Props) {
 
     setLoading(true);
     try {
-      const response = await api.get(`/organizations/code/${encodeURIComponent(trimmed)}`);
+      const response = await api.post('/organizations/validate-code', { code: trimmed });
       const org = response.data.data;
 
       await setSelectedOrg({
@@ -45,12 +54,22 @@ export default function OrgCodeScreen({ navigation }: Props) {
         code: trimmed,
       });
 
+      setFailedAttempts(0);
+      setLockUntil(null);
       // Navigate back to login so user can sign in with the org context
-      navigation.navigate('Login');
+      navigation.goBack();
     } catch (error: any) {
-      const message =
-        error.response?.data?.error || 'Invalid organization code. Please try again.';
-      Alert.alert('Not Found', message);
+      const next = failedAttempts + 1;
+      setFailedAttempts(next);
+      if (next >= 5) {
+        setLockUntil(Date.now() + 30_000);
+        Alert.alert('Too many attempts', 'Please wait 30 seconds before trying again.');
+        setFailedAttempts(0);
+      } else {
+        const message =
+          error.response?.data?.error || 'Invalid organization code. Please try again.';
+        Alert.alert('Not Found', message);
+      }
     } finally {
       setLoading(false);
     }

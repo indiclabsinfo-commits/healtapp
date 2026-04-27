@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { colors, glassCard, gradientColors } from '../theme/colors';
 import { useAuthStore } from '../store/auth';
 import api from '../config/api';
@@ -20,6 +21,7 @@ interface UserStats {
 }
 
 export default function ProfileScreen() {
+  const navigation = useNavigation<any>();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [stats, setStats] = useState<UserStats>({
@@ -79,10 +81,10 @@ export default function ProfileScreen() {
     label: string;
     onPress: () => void;
   }[] = [
-    { icon: 'bar-chart-outline', label: 'Assessment History', onPress: () => {} },
-    { icon: 'notifications-outline', label: 'Notifications', onPress: () => {} },
-    { icon: 'lock-closed-outline', label: 'Privacy & Security', onPress: () => {} },
-    { icon: 'settings-outline', label: 'Settings', onPress: () => {} },
+    { icon: 'bar-chart-outline', label: 'Assessment History', onPress: () => navigation.getParent()?.navigate('Home', { screen: 'AssessmentHistory' }) },
+    { icon: 'notifications-outline', label: 'Notifications', onPress: () => navigation.getParent()?.navigate('Home', { screen: 'Notifications' }) },
+    { icon: 'lock-closed-outline', label: 'Privacy & Security', onPress: () => navigation.getParent()?.navigate('Home', { screen: 'ChangePassword' }) },
+    { icon: 'settings-outline', label: 'Settings', onPress: () => navigation.getParent()?.navigate('Home', { screen: 'Settings' }) },
   ];
 
   return (

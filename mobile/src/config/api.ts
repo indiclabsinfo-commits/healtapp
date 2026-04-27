@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-const API_BASE_URL = 'https://healtapp-production.up.railway.app/api/v1';
+const API_BASE_URL = 'https://ambrin.duckdns.org/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -146,7 +146,7 @@ export default function HomeScreen({ navigation }: Props) {
       title: 'Counsellors',
       subtitle: 'Find experts',
       color: colors.accentPurple,
-      onPress: () => navigation.navigate('Explore'),
+      onPress: () => navigation.getParent()?.navigate('Explore'),
     },
     {
       icon: 'leaf-outline',

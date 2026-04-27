@@ -622,7 +622,8 @@ function ResultScreen({
 
 type Mode = 'browse' | 'quiz' | 'result';
 
-export default function AssessmentScreen({ navigation }: { navigation: any }) {
+export default function AssessmentScreen({ navigation, route }: { navigation: any; route?: any }) {
+  const qidParam = route?.params?.qid;
   const [mode, setMode] = useState<Mode>('browse');
   const [activeQuestionnaire, setActiveQuestionnaire] =
     useState<QuestionnaireDetail | null>(null);
@@ -632,6 +633,25 @@ export default function AssessmentScreen({ navigation }: { navigation: any }) {
     setActiveQuestionnaire(q);
     setMode('quiz');
   };
+
+  // Deep-link: navigate('Assessment', { qid: 17 }) auto-loads + starts that questionnaire.
+  // Used by push-notification taps and assignment cards on Home.
+  useEffect(() => {
+    if (!qidParam) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await api.get(`/questionnaires/${qidParam}`);
+        const detail: QuestionnaireDetail = response.data?.data;
+        if (cancelled || !detail || !detail.questions || detail.questions.length === 0) return;
+        setActiveQuestionnaire(detail);
+        setMode('quiz');
+      } catch {
+        Alert.alert('Error', 'Failed to load that assessment.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [qidParam]);
 
   const handleComplete = (score: number) => {
     setResultScore(score);

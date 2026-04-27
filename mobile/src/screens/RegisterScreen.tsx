@@ -29,10 +29,15 @@ export default function RegisterScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   const register = useAuthStore((s) => s.register);
+  const selectedOrg = useAuthStore((s) => s.selectedOrg);
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
       Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
       return;
     }
 
@@ -41,14 +46,15 @@ export default function RegisterScreen({ navigation }: Props) {
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters.');
+    // Match server policy (≥8 chars). Was 6, allowed weak passwords.
+    if (password.length < 8) {
+      Alert.alert('Weak password', 'Password must be at least 8 characters.');
       return;
     }
 
     setLoading(true);
     try {
-      await register(name.trim(), email.trim(), password);
+      await register(name.trim(), email.trim(), password, selectedOrg?.code);
     } catch (error: any) {
       const message =
         error.response?.data?.error || 'Registration failed. Please try again.';

@@ -39,7 +39,7 @@ interface AuthState {
   selectedOrg: { id: number; name: string; code?: string } | null;
 
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, orgCode?: string) => Promise<void>;
   logout: () => Promise<void>;
   loadTokens: () => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -78,8 +78,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  register: async (name: string, email: string, password: string) => {
-    const response = await api.post('/auth/register', { name, email, password });
+  register: async (name: string, email: string, password: string, orgCode?: string) => {
+    const response = await api.post('/auth/register', { name, email, password, ...(orgCode ? { orgCode } : {}) });
     const { user, accessToken, refreshToken, organizations } = response.data.data;
 
     await SecureStore.setItemAsync('accessToken', accessToken);
@@ -155,21 +155,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             memberships,
             selectedOrg,
           });
-        } catch {
-          // Token invalid/expired, clear everything
-          await SecureStore.deleteItemAsync('accessToken');
-          await SecureStore.deleteItemAsync('refreshToken');
-          await SecureStore.deleteItemAsync('memberships');
-          await SecureStore.deleteItemAsync('selectedOrg');
-          set({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-            isLoading: false,
-            memberships: [],
-            selectedOrg: null,
-          });
+        } catch (err: any) {
+          const status = err?.response?.status;
+          // Only clear tokens on auth failure. Network errors / 5xx must NOT log the user out
+          // — that punished users for transient backend problems (502 from nginx, etc.)
+          if (status === 401 || status === 403) {
+            await SecureStore.deleteItemAsync('accessToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+            await SecureStore.deleteItemAsync('memberships');
+            await SecureStore.deleteItemAsync('selectedOrg');
+            set({
+              user: null,
+              accessToken: null,
+              refreshToken: null,
+              isAuthenticated: false,
+              isLoading: false,
+              memberships: [],
+              selectedOrg: null,
+            });
+          } else {
+            // Transient error — keep tokens, mark authenticated optimistically using
+            // whatever we had before. /auth/me retry happens on next app open.
+            set({
+              isAuthenticated: true,
+              isLoading: false,
+              memberships,
+              selectedOrg,
+            });
+          }
         }
       } else {
         set({ isLoading: false });

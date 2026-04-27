@@ -51,7 +51,7 @@ const getInitials = (name: string): string => {
     .slice(0, 2);
 };
 
-export default function ExploreScreen() {
+export default function ExploreScreen({ navigation }: { navigation: any }) {
   const [counsellors, setCounsellors] = useState<Counsellor[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -214,7 +214,7 @@ export default function ExploreScreen() {
           const stars = renderStars(counsellor.rating);
 
           return (
-            <View key={counsellor.id} style={[styles.counsellorCard, glassCard]}>
+            <TouchableOpacity key={counsellor.id} style={[styles.counsellorCard, glassCard]} activeOpacity={0.85} onPress={() => navigation.navigate('CounsellorDetail', { counsellor })}>
               <View style={styles.counsellorHeader}>
                 {/* Avatar */}
                 <View style={[styles.avatar, { backgroundColor: avatarColor + '20' }]}>
@@ -257,7 +257,7 @@ export default function ExploreScreen() {
                   ))}
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
           );
         })
       )}
