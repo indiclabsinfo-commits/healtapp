@@ -12,6 +12,7 @@ import {
   deleteQuestionnaireApi,
   createCategoryApi,
   createQuestionApi,
+  createLevelApi,
 } from "@/lib/questionnaires";
 import {
   ChevronRight,
@@ -115,6 +116,12 @@ export default function AdminQuestionnairePage() {
   const [catFormName, setCatFormName] = useState("");
   const [catFormDesc, setCatFormDesc] = useState("");
   const [catSaving, setCatSaving] = useState(false);
+
+  // Add Level form (Step 2)
+  const [showAddLevel, setShowAddLevel] = useState(false);
+  const [levelFormName, setLevelFormName] = useState("");
+  const [levelFormOrder, setLevelFormOrder] = useState("");
+  const [levelSaving, setLevelSaving] = useState(false);
 
   // Add Question form (Step 3)
   const [showAddQuestion, setShowAddQuestion] = useState(false);
@@ -248,6 +255,7 @@ export default function AdminQuestionnairePage() {
   }
 
   async function handleSaveQuestionnaire() {
+    if (saving) return; // Re-entry guard — prevents double-click duplicates
     if (!buildTitle.trim()) {
       setError("Please enter a questionnaire title");
       return;
@@ -257,6 +265,17 @@ export default function AdminQuestionnairePage() {
       return;
     }
     if (!selectedCategory || !selectedLevel) return;
+
+    // Guard against creating duplicate by title (only on create, not edit)
+    if (!editingQuestionnaire) {
+      const dupe = questionnaires.find(
+        (q) => q.title.trim().toLowerCase() === buildTitle.trim().toLowerCase()
+      );
+      if (dupe) {
+        setError(`A questionnaire titled "${dupe.title}" already exists. Choose a different title or edit the existing one.`);
+        return;
+      }
+    }
 
     setSaving(true);
     setError("");
@@ -362,6 +381,31 @@ export default function AdminQuestionnairePage() {
       setError(err.response?.data?.error || "Failed to create category");
     } finally {
       setCatSaving(false);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Add Level                                                        */
+  /* ---------------------------------------------------------------- */
+
+  async function handleAddLevel(e: React.FormEvent) {
+    e.preventDefault();
+    if (!levelFormName.trim() || !selectedCategory) return;
+    setLevelSaving(true);
+    setError("");
+    try {
+      const order = levelFormOrder ? parseInt(levelFormOrder) : (levels.length + 1);
+      await createLevelApi({ name: levelFormName.trim(), categoryId: selectedCategory.id, order });
+      setLevelFormName("");
+      setLevelFormOrder("");
+      setShowAddLevel(false);
+      // Refetch levels for current category
+      const res = await getLevelsApi(selectedCategory.id);
+      setLevels(res.data || []);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to create level");
+    } finally {
+      setLevelSaving(false);
     }
   }
 
@@ -660,19 +704,82 @@ export default function AdminQuestionnairePage() {
               <ChevronLeft size={14} /> Back to Categories
             </button>
 
-            <h2
-              className="font-heading mb-1 text-[18px] font-semibold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              {selectedCategory.name}
-            </h2>
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-heading text-[18px] font-semibold" style={{ color: "var(--text-primary)" }}>
+                {selectedCategory.name}
+              </h2>
+              <button
+                onClick={() => { setLevelFormName(""); setLevelFormOrder(""); setShowAddLevel((v) => !v); }}
+                className="flex items-center gap-1.5 rounded-button px-4 py-2 text-[12px] font-medium transition-all"
+                style={{ background: "rgba(111,255,233,0.1)", color: "var(--accent-primary)", border: "1px solid rgba(111,255,233,0.2)" }}
+              >
+                <Plus size={14} />
+                Add Level
+              </button>
+            </div>
             <p className="mb-6 text-[12px]" style={{ color: "var(--text-muted)" }}>
               Select a level to view its questions.
             </p>
 
-            {levels.length === 0 && (
+            {/* Inline Add Level form */}
+            {showAddLevel && (
+              <form
+                onSubmit={handleAddLevel}
+                className="glass-card mb-6 p-5 space-y-4"
+                style={{ borderRadius: "20px", border: "1px solid rgba(111,255,233,0.2)" }}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-semibold" style={{ color: "var(--text-primary)" }}>New Level</p>
+                  <button type="button" onClick={() => setShowAddLevel(false)} style={{ color: "var(--text-muted)" }}>
+                    <X size={16} />
+                  </button>
+                </div>
+                <div>
+                  <label htmlFor="level-name" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Name *</label>
+                  <input
+                    id="level-name"
+                    name="levelName"
+                    type="text"
+                    value={levelFormName}
+                    onChange={(e) => setLevelFormName(e.target.value)}
+                    className="input-field"
+                    placeholder="e.g. Mild / Moderate / Severe"
+                    required
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label htmlFor="level-order" className="mb-2 block text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>Order (optional)</label>
+                  <input
+                    id="level-order"
+                    name="levelOrder"
+                    type="number"
+                    min={1}
+                    value={levelFormOrder}
+                    onChange={(e) => setLevelFormOrder(e.target.value)}
+                    className="input-field"
+                    placeholder={String(levels.length + 1)}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLevel(false)}
+                    className="flex-1 rounded-button border px-4 py-2.5 text-[12px] font-medium"
+                    style={{ borderColor: "var(--accent-primary)", color: "var(--accent-primary)", background: "transparent" }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={levelSaving} className="cta-button flex-1" style={{ padding: "10px" }}>
+                    {levelSaving ? "Creating..." : "Create Level"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {levels.length === 0 && !showAddLevel && (
               <div className="py-12 text-center text-[13px]" style={{ color: "var(--text-muted)" }}>
-                No levels found in this category.
+                No levels found. Use the Add Level button above to create one.
               </div>
             )}
 

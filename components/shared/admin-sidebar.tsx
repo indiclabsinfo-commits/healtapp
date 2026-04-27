@@ -62,6 +62,7 @@ const orgAdminNav: NavItem[] = [
   { href: "/admin/students", label: "Students", icon: GraduationCap },
   { href: "/admin/assignments", label: "Assignments", icon: FileText },
   { href: "/admin/behavior-log", label: "Behavior Log", icon: AlertTriangle },
+  { href: "/admin/questionnaire", label: "Questionnaire", icon: ClipboardList },
   { href: "/admin/principal", label: "Analytics", icon: BarChart3 },
   { href: "/admin/bulk-register", label: "Bulk Register", icon: Upload },
   { href: "/admin/consent", label: "Parent Consent", icon: ShieldCheck },

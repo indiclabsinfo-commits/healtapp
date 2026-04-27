@@ -54,3 +54,8 @@ export async function createQuestionApi(data: {
   const response = await api.post("/questions", data);
   return response.data;
 }
+
+export async function createLevelApi(data: { name: string; categoryId: number; order?: number }) {
+  const response = await api.post("/levels", data);
+  return response.data;
+}

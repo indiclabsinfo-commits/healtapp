@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Brain, HeartPulse, CheckCircle2, Phone, ClipboardList } from "lucide-react";
 import { listQuestionnairesApi, getQuestionnaireApi } from "@/lib/questionnaires";
 import { submitAssessmentApi } from "@/lib/assessments";
@@ -186,6 +187,9 @@ function getInterpretation(type: "PHQ9" | "GAD7", scorePercent: number) {
 }
 
 export default function AssessmentPage() {
+  const searchParams = useSearchParams();
+  const qidParam = searchParams.get("qid");
+
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -211,6 +215,18 @@ export default function AssessmentPage() {
   const [score, setScore] = useState<number | null>(null);
 
   useEffect(() => { fetchQuestionnaires(); }, []);
+
+  // Deep-link: ?qid=N auto-starts that questionnaire (used by Assignments → Take quiz flow)
+  useEffect(() => {
+    if (!qidParam || quizMode) return;
+    const id = parseInt(qidParam);
+    if (Number.isNaN(id)) return;
+    // Wait until questionnaires loaded so we can detect type for clinical scoring
+    if (loading) return;
+    const found = questionnaires.find((q) => q.id === id);
+    const type = found ? detectAssessmentType(found.title) : null;
+    startQuiz(id, type);
+  }, [qidParam, loading, questionnaires]);
 
   async function fetchQuestionnaires() {
     try {

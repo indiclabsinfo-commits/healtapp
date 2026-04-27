@@ -39,7 +39,10 @@ export default function AdminCreditsPage() {
   const isAdmin = useAuthStore((s) => s.isAdmin);
   const memberships = useAuthStore((s) => s.memberships);
 
-  const orgId = memberships?.[0]?.organization?.id;
+  // Super admins pick an org from the dropdown; org members default to their first org.
+  const [selectedOrgId, setSelectedOrgId] = useState<number | null>(memberships?.[0]?.organization?.id ?? null);
+  const [allOrgs, setAllOrgs] = useState<{ id: number; name: string; creditBalance: number }[]>([]);
+  const orgId = selectedOrgId;
 
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
   const [members, setMembers] = useState<OrgMember[]>([]);
@@ -61,8 +64,25 @@ export default function AdminCreditsPage() {
   useEffect(() => {
     if (orgId) {
       fetchData();
+    } else if (isAdmin) {
+      // Super admin with no membership — fetch all orgs for picker
+      setLoading(false);
+      api.get("/organizations").then((res) => {
+        const orgs = res.data?.data || [];
+        setAllOrgs(orgs);
+        if (orgs.length > 0 && selectedOrgId == null) setSelectedOrgId(orgs[0].id);
+      }).catch(() => {});
     }
-  }, [orgId]);
+  }, [orgId, isAdmin]);
+
+  // Fetch org list once for super admin (drives the picker dropdown)
+  useEffect(() => {
+    if (isAdmin) {
+      api.get("/organizations").then((res) => {
+        setAllOrgs(res.data?.data || []);
+      }).catch(() => {});
+    }
+  }, [isAdmin]);
 
   async function fetchData() {
     setLoading(true);
@@ -136,9 +156,32 @@ export default function AdminCreditsPage() {
       <div>
         <AdminTopbar title="Credit Management" subtitle="Manage organization credits" />
         <div className="p-8">
-          <div className="py-12 text-center text-[13px]" style={{ color: "var(--text-muted)" }}>
-            No organization membership found. You need to be part of an organization to manage credits.
-          </div>
+          {isAdmin ? (
+            <div className="glass-card p-8 text-center" style={{ borderRadius: "20px", maxWidth: 480, margin: "0 auto" }}>
+              <p className="text-[14px] font-semibold mb-2" style={{ color: "var(--text-primary)" }}>Choose an organization</p>
+              <p className="mb-4 text-[12px]" style={{ color: "var(--text-muted)" }}>
+                As Super Admin, you can manage credits for any organization. Select one below.
+              </p>
+              {allOrgs.length === 0 ? (
+                <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>Loading organizations…</p>
+              ) : (
+                <select
+                  className="input-field"
+                  onChange={(e) => setSelectedOrgId(e.target.value ? parseInt(e.target.value) : null)}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Select an organization…</option>
+                  {allOrgs.map((o) => (
+                    <option key={o.id} value={o.id}>{o.name} ({o.creditBalance} credits)</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-[13px]" style={{ color: "var(--text-muted)" }}>
+              No organization membership found. You need to be part of an organization to manage credits.
+            </div>
+          )}
         </div>
       </div>
     );
@@ -149,6 +192,26 @@ export default function AdminCreditsPage() {
       <AdminTopbar title="Credit Management" subtitle="Manage organization credits and member balances" />
 
       <div className="p-8">
+        {/* Super admin org picker */}
+        {isAdmin && allOrgs.length > 0 && (
+          <div className="mb-5 flex items-center gap-3">
+            <label htmlFor="org-picker" className="text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+              Org
+            </label>
+            <select
+              id="org-picker"
+              className="input-field"
+              style={{ maxWidth: 320 }}
+              value={selectedOrgId ?? ""}
+              onChange={(e) => setSelectedOrgId(e.target.value ? parseInt(e.target.value) : null)}
+            >
+              {allOrgs.map((o) => (
+                <option key={o.id} value={o.id}>{o.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Error */}
         {error && (
           <div className="mb-4 rounded-card p-3 text-[12px]" style={{ background: "rgba(255,107,107,0.1)", color: "#FF6B6B" }}>
