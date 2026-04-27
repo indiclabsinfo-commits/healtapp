@@ -304,22 +304,91 @@ export default function AssessmentPage() {
   // --- RESULT SCREEN — custom questionnaire (no clinical type) ---
   if (showResult && !activeType) {
     const pct = score ?? 0;
+    // Generic 4-band interpretation. Used when the questionnaire isn't a known clinical instrument.
+    // Higher score = higher concern, matching the PHQ-9/GAD-7 convention.
+    const GENERIC_BANDS = [
+      { label: "Minimal",  min: 0,  max: 25,  color: "#4ADE80",
+        message: "Your responses suggest minimal concern in this area. Keep up healthy habits — sleep, exercise, and social connection make a real difference.",
+        cta: false },
+      { label: "Mild",     min: 26, max: 50,  color: "#FFD93D",
+        message: "Mild concerns noted. Try our Theory sessions and Breathing exercises. If this persists, consider speaking to a counsellor.",
+        cta: false },
+      { label: "Moderate", min: 51, max: 75,  color: "#FF9F40",
+        message: "Moderate concerns detected. Talking to a counsellor can make a significant difference. You don't have to go through this alone.",
+        cta: true },
+      { label: "Severe",   min: 76, max: 100, color: "#FF6B6B",
+        message: "Significant concerns noted. We recommend connecting with a counsellor soon for support and a care plan.",
+        cta: true },
+    ];
+    const band = GENERIC_BANDS.find((b) => pct >= b.min && pct <= b.max) || GENERIC_BANDS[0];
+
     return (
       <div className="flex flex-col items-center pt-8 pb-12">
-        <div className="mb-5 flex h-18 w-18 items-center justify-center rounded-[22px] p-4" style={{ background: "rgba(111,255,233,0.12)" }}>
-          <CheckCircle2 size={36} style={{ color: "var(--accent-primary)" }} />
+        <div className="mb-5 flex h-18 w-18 items-center justify-center rounded-[22px] p-4" style={{ background: `${band.color}20` }}>
+          <CheckCircle2 size={36} style={{ color: band.color }} />
         </div>
         <h1 className="font-heading text-[22px] font-semibold" style={{ color: "var(--text-primary)" }}>Assessment Complete</h1>
         <p className="mt-1 text-[12px]" style={{ color: "var(--text-muted)" }}>{activeQuiz?.title}</p>
+
+        {/* Score + Level card */}
         <div className="glass-card mt-6 w-full max-w-sm p-6 text-center">
-          <p className="text-[10px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>Your Score</p>
-          <p className="font-heading mt-2 text-[52px] font-bold leading-none" style={{ color: "var(--accent-primary)" }}>{Math.round(pct)}%</p>
+          <p className="text-[10px] uppercase tracking-[2px]" style={{ color: "var(--text-muted)" }}>Level</p>
+          <p className="font-heading mt-2 text-[44px] font-bold leading-none" style={{ color: band.color }}>{band.label}</p>
+          <p className="mt-1 text-[12px]" style={{ color: "var(--text-muted)" }}>
+            Score: {Math.round(pct)}% · Range: {band.min}–{band.max}%
+          </p>
           <div className="mt-4 h-2 w-full rounded-full" style={{ background: "var(--progress-bg)" }}>
-            <div className="h-2 rounded-full" style={{ width: `${Math.max(pct, 4)}%`, background: "var(--gradient-cta)" }} />
+            <div className="h-2 rounded-full transition-all" style={{ width: `${Math.max(pct, 4)}%`, background: band.color }} />
+          </div>
+
+          {/* Feedback message */}
+          <div
+            className="mt-4 rounded-[12px] p-3 text-left"
+            style={{ background: `${band.color}12`, border: `1px solid ${band.color}25` }}
+          >
+            <p className="text-[12px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+              {band.message}
+            </p>
           </div>
         </div>
-        <button onClick={() => { setShowResult(false); setQuizMode(false); setActiveQuiz(null); setScore(null); }} className="cta-button mt-8 w-full max-w-sm">
-          Done
+
+        {/* Severity scale */}
+        <div className="glass-card mt-4 w-full max-w-sm p-4">
+          <p className="mb-3 text-[10px] uppercase tracking-[1.5px]" style={{ color: "var(--text-muted)" }}>
+            Severity Scale
+          </p>
+          <div className="space-y-1.5">
+            {GENERIC_BANDS.map((b) => (
+              <div key={b.label} className="flex items-center justify-between">
+                <span className="text-[11px]" style={{ color: b.label === band.label ? b.color : "var(--text-muted)", fontWeight: b.label === band.label ? 600 : 400 }}>
+                  {b.label}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>{b.min}–{b.max}%</span>
+                  {b.label === band.label ? (
+                    <span className="rounded-full px-2 py-0.5 text-[8px] font-medium" style={{ background: `${b.color}20`, color: b.color }}>YOU</span>
+                  ) : (
+                    <span className="w-[32px]" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {band.cta && (
+          <a
+            href="mailto:hello@snowflakescounselling.com?subject=Counselling%20Enquiry"
+            className="cta-button mt-5 w-full max-w-sm flex items-center justify-center gap-2 no-underline"
+            style={{ textDecoration: "none" }}
+          >
+            <Phone size={14} />
+            Connect with a Counsellor
+          </a>
+        )}
+
+        <button onClick={() => { setShowResult(false); setQuizMode(false); setActiveQuiz(null); setScore(null); }} className="mt-4 text-[13px]" style={{ color: "var(--text-muted)" }}>
+          ← Back to Assessments
         </button>
       </div>
     );
