@@ -8,8 +8,24 @@ export async function createQuestion(data: {
     throw { status: 404, message: 'Level not found', code: 'NOT_FOUND' };
   }
 
+  // Server-side dupe check (case-insensitive) — frontend check is best-effort
+  // and can race when the list is stale. This is the authoritative guard.
+  const existing = await prisma.question.findFirst({
+    where: {
+      levelId: data.levelId,
+      text: { equals: data.text.trim(), mode: 'insensitive' },
+    },
+  });
+  if (existing) {
+    throw {
+      status: 409,
+      message: 'A question with this text already exists in this level',
+      code: 'DUPLICATE_QUESTION',
+    };
+  }
+
   return prisma.question.create({
-    data: data as any,
+    data: { ...data, text: data.text.trim() } as any,
   });
 }
 

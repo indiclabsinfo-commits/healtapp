@@ -45,7 +45,21 @@ export async function getQuestionnaireById(id: number) {
 export async function createQuestionnaire(data: {
   title: string; categoryId: number; levelId: number; questionIds: number[]; published?: boolean;
 }) {
-  return prisma.questionnaire.create({ data: { ...data, questionIds: data.questionIds } });
+  // Case-insensitive title uniqueness — was returning 401 due to error bubbling
+  // through middleware. Explicit 409 here returns the right status.
+  const dupe = await prisma.questionnaire.findFirst({
+    where: { title: { equals: data.title.trim(), mode: 'insensitive' } },
+  });
+  if (dupe) {
+    throw {
+      status: 409,
+      message: `A questionnaire titled "${dupe.title}" already exists`,
+      code: 'DUPLICATE_TITLE',
+    };
+  }
+  return prisma.questionnaire.create({
+    data: { ...data, title: data.title.trim(), questionIds: data.questionIds },
+  });
 }
 
 export async function updateQuestionnaire(id: number, data: {

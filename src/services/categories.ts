@@ -21,12 +21,15 @@ export async function listCategories() {
 }
 
 export async function createCategory(data: { name: string; description?: string }) {
-  const existing = await prisma.category.findUnique({ where: { name: data.name } });
+  // Case-insensitive uniqueness — "Resilience" and "resilience" should NOT both succeed
+  const existing = await prisma.category.findFirst({
+    where: { name: { equals: data.name.trim(), mode: 'insensitive' } },
+  });
   if (existing) {
     throw { status: 409, message: 'Category name already exists', code: 'DUPLICATE_NAME' };
   }
 
-  return prisma.category.create({ data });
+  return prisma.category.create({ data: { ...data, name: data.name.trim() } });
 }
 
 export async function updateCategory(id: number, data: { name?: string; description?: string }) {
