@@ -368,11 +368,18 @@ export default function AdminQuestionnairePage() {
 
   async function handleAddCategory(e: React.FormEvent) {
     e.preventDefault();
+    if (catSaving) return; // Re-entry guard
     if (!catFormName.trim()) return;
+    const trimmed = catFormName.trim();
+    const dupe = categories.find((c) => c.name.trim().toLowerCase() === trimmed.toLowerCase());
+    if (dupe) {
+      setError(`A category named "${dupe.name}" already exists.`);
+      return;
+    }
     setCatSaving(true);
     setError("");
     try {
-      await createCategoryApi({ name: catFormName.trim(), description: catFormDesc.trim() || undefined });
+      await createCategoryApi({ name: trimmed, description: catFormDesc.trim() || undefined });
       setCatFormName("");
       setCatFormDesc("");
       setShowAddCategory(false);
@@ -390,12 +397,19 @@ export default function AdminQuestionnairePage() {
 
   async function handleAddLevel(e: React.FormEvent) {
     e.preventDefault();
+    if (levelSaving) return; // Re-entry guard
     if (!levelFormName.trim() || !selectedCategory) return;
+    const trimmed = levelFormName.trim();
+    const dupe = levels.find((l) => l.name.trim().toLowerCase() === trimmed.toLowerCase());
+    if (dupe) {
+      setError(`A level named "${dupe.name}" already exists in this category.`);
+      return;
+    }
     setLevelSaving(true);
     setError("");
     try {
       const order = levelFormOrder ? parseInt(levelFormOrder) : (levels.length + 1);
-      await createLevelApi({ name: levelFormName.trim(), categoryId: selectedCategory.id, order });
+      await createLevelApi({ name: trimmed, categoryId: selectedCategory.id, order });
       setLevelFormName("");
       setLevelFormOrder("");
       setShowAddLevel(false);
@@ -415,7 +429,17 @@ export default function AdminQuestionnairePage() {
 
   async function handleAddQuestion(e: React.FormEvent) {
     e.preventDefault();
+    if (qSaving) return; // Re-entry guard — blocks double-click duplicates
     if (!qFormText.trim() || !selectedLevel) return;
+
+    // Case-insensitive dupe check vs questions already in this level
+    const trimmed = qFormText.trim();
+    const dupe = questions.find((q) => q.text.trim().toLowerCase() === trimmed.toLowerCase());
+    if (dupe) {
+      setError(`A question with this text already exists in this level.`);
+      return;
+    }
+
     setCatSaving(false);
     setQSaving(true);
     setError("");
@@ -433,7 +457,7 @@ export default function AdminQuestionnairePage() {
       } else {
         options = ["Yes", "No"];
       }
-      await createQuestionApi({ text: qFormText.trim(), type: qFormType, options, levelId: selectedLevel.id });
+      await createQuestionApi({ text: trimmed, type: qFormType, options, levelId: selectedLevel.id });
       setQFormText("");
       setQFormType("MCQ");
       setQFormOptions(["", "", "", ""]);

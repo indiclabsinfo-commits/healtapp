@@ -32,15 +32,18 @@ export default function LoginPage() {
       if (result.data.user.role === "ADMIN") {
         router.push("/admin/dashboard");
       } else {
-        // Check member role for routing
-        const primaryRole = memberships[0]?.role;
-        if (primaryRole === "ORG_ADMIN") {
-          router.push("/admin/users");
-        } else if (primaryRole === "TEACHER") {
+        // Pick the highest-privilege membership across ALL orgs (not just memberships[0]).
+        // A user can be ORG_ADMIN of one org and STUDENT of another — admin role wins.
+        const ROLE_PRIORITY = ["ORG_ADMIN", "COUNSELLOR", "HR", "TEACHER", "EMPLOYEE", "STUDENT"];
+        const allRoles: string[] = (memberships as any[]).map((m) => m.role).filter(Boolean);
+        const highest = ROLE_PRIORITY.find((r) => allRoles.includes(r));
+        if (highest === "ORG_ADMIN") {
+          router.push("/admin/dashboard");
+        } else if (highest === "TEACHER") {
           router.push("/admin/students");
-        } else if (primaryRole === "HR") {
+        } else if (highest === "HR") {
           router.push("/admin/users");
-        } else if (primaryRole === "COUNSELLOR") {
+        } else if (highest === "COUNSELLOR") {
           router.push("/admin/counsellor-dashboard");
         } else {
           router.push("/dashboard");
