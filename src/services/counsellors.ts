@@ -105,3 +105,31 @@ export async function deleteCounsellor(id: number) {
     data: { status: 'INACTIVE' },
   });
 }
+
+export async function linkUserAccount(counsellorId: number, email: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw { status: 404, message: 'No user found with that email', code: 'USER_NOT_FOUND' };
+
+  const counsellor = await prisma.counsellor.findUnique({ where: { id: counsellorId } });
+  if (!counsellor) throw { status: 404, message: 'Counsellor not found', code: 'NOT_FOUND' };
+
+  // Check userId not already taken by another counsellor
+  const existing = await prisma.counsellor.findUnique({ where: { userId: user.id } });
+  if (existing && existing.id !== counsellorId) {
+    throw { status: 409, message: 'This user is already linked to another counsellor profile', code: 'CONFLICT' };
+  }
+
+  const counsellorUpdated = await prisma.counsellor.update({
+    where: { id: counsellorId },
+    data: { userId: user.id },
+    include: { tags: true },
+  });
+
+  // Promote all org memberships to COUNSELLOR so login routing works
+  await prisma.organizationMember.updateMany({
+    where: { userId: user.id },
+    data: { role: 'COUNSELLOR' },
+  });
+
+  return counsellorUpdated;
+}
